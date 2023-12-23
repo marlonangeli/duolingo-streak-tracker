@@ -25,10 +25,14 @@ export async function GET(
   const body = await response.json();
 
   if (body.users.length === 0) {
-    return NextResponse.json({ error: "User not found" }, { headers });
+    // return ErrorResponse user notfound
+    return NextResponse.json(
+      { error: "user not found" },
+      { headers, status: 404 }
+    );
   }
 
   const userData: User = body.users[0];
 
-  return NextResponse.json(userData, { headers });
+  return NextResponse.json(userData, { headers, status: 200 });
 }

@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Card from "./components/Card";
+import { User } from "./models/user";
 
-const Preview: React.FC<{ data: UserData | null }> = ({ data }) => {
+const Preview: React.FC<{ data: User | null }> = ({ data }) => {
   return (
     <div className="mt-4 p-4 border border-gray-300 rounded-lg">
       <pre>{JSON.stringify(data, null, 2)}</pre>
@@ -13,14 +14,24 @@ const Preview: React.FC<{ data: UserData | null }> = ({ data }) => {
 
 const Home: React.FC = () => {
   const [username, setUsername] = useState<string>("");
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setError(null);
+    setUserData(null);
+
     try {
       const response = await fetch(`/api/stats/${username}`);
-      const data: UserData = await response.json();
+
+      if (!response.ok) {
+        setError("Usuário não encontrado");
+        return;
+      }
+
+      const data: User = await response.json();
       setUserData(data);
     } catch (error) {
       console.error(error);
@@ -51,17 +62,16 @@ const Home: React.FC = () => {
         {userData && (
           <Card.Root>
             <Card.Header
-              name={userData.users[0].name}
-              // imageUrl={userData.users[0].picture}
-              imageUrl={userData.users[0].picture}
-              languageFlags={userData.users[0].courses.map(
+              name={userData.name}
+              imageUrl={userData.picture}
+              languageFlags={userData.courses.map(
                 (course) => course.learningLanguage
               )}
-              key={userData.users[0].id}
+              key={userData.id}
             />
             <Card.Content
-              streak={userData.users[0].streak}
-              totalXp={userData.users[0].totalXp}
+              streak={userData.streak}
+              totalXp={userData.totalXp}
               league="Teste"
               podiums={3}
             />
@@ -69,6 +79,8 @@ const Home: React.FC = () => {
         )}
 
         {userData && <Preview data={userData} />}
+
+        {error && <div className="text-red-500 mt-4">{error}</div>}
       </div>
     </div>
   );
