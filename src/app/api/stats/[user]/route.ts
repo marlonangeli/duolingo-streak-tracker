@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { API_BASE_URL, API_QUERY_PARAMETERS } from "@/app/api/constants";
-import { User } from "@/app/models/user";
+import { User } from "@/models/user";
 
 export const runtime = "edge";
 
@@ -8,7 +8,11 @@ export async function GET(
   request: Request,
   context: { params: { user: string } }
 ) {
-  const headers = { "Content-Type": "application/json" };
+  const headers = {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-cache",
+    "Access-Control-Allow-Origin": "*",
+  };
 
   const user = context.params.user;
 

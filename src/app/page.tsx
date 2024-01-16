@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Card from "./components/Card";
-import { User } from "./models/user";
+import Card from "@/components/Card";
+import { User } from "@/models/user";
 
 const Preview: React.FC<{ data: User | null }> = ({ data }) => {
   return (
