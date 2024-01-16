@@ -11,7 +11,6 @@ export async function GET(
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": "no-cache",
-    "Access-Control-Allow-Origin": "*",
   };
 
   const user = context.params.user;
