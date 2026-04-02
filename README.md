@@ -20,16 +20,8 @@ Ele foi criado inicialmente para adicionar as estatísticas do usuário ao perfi
 
 Se você gostaria de contribuir para o desenvolvimento deste projeto, fique à vontade para abrir problemas (issues) e enviar solicitações de pull (pull requests). Toda contribuição é bem-vinda!
 
-## Contato
-
-- Autor: **Marlon Angeli**
-- Email: [iam@marlonangeli.com.br](mailto:iam@marlonangeli.com.br)
-- [Linktree](https://linktr.ee/marlonangeli)
-
 Sinta-se à vontade para personalizar este arquivo `README.md` de acordo com as necessidades do projeto. Certifique-se de fornecer informações claras e úteis para os usuários.
 
 ---
 
 <img src="https://design.duolingo.com/bb221188924ec942b2f1.svg" alt="Lili" width="240px" title="Lili">
-
-![duolingo](http://localhost:3000/marlonangeli)
