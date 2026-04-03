@@ -1,27 +1,77 @@
 # Duolingo Streak Tracker
 
-<img src="https://design.duolingo.com/fe225c25f1c6afe81424.svg" alt="Hello Duo" width="320px" title="Hello Duo" >
+Public Duolingo stats API + embeddable SVG cards for GitHub READMEs.
 
-## Descrição
-
-O Duolingo Streak Tracker é uma API que permite aos desenvolvedores obter estatísticas do usuário no Duolingo, incluindo informações sobre as sequências diárias (streaks) dos usuários, seu progresso em cursos e outras estatísticas relevantes.
-
-Ele foi criado inicialmente para adicionar as estatísticas do usuário ao perfil do GitHub, para isso siga o passo a passo [aqui](#adicionar-ao-perfil-do-github-usando-github-actions)
-
-## Recursos
-
-- `getUserStats(username) [/api/stats/{username}]`: Este método permite que você obtenha as estatísticas do usuário com base no nome de usuário fornecido.
-
-### Adicionar ao perfil do GitHub usando GitHub Actions
-
-> Em fase de implementação :)
-
-## Contribuição
-
-Se você gostaria de contribuir para o desenvolvimento deste projeto, fique à vontade para abrir problemas (issues) e enviar solicitações de pull (pull requests). Toda contribuição é bem-vinda!
-
-Sinta-se à vontade para personalizar este arquivo `README.md` de acordo com as necessidades do projeto. Certifique-se de fornecer informações claras e úteis para os usuários.
+> 🇧🇷 Portuguese: see [`docs/README.pt-BR.md`](./docs/README.pt-BR.md)
 
 ---
 
-<img src="https://design.duolingo.com/bb221188924ec942b2f1.svg" alt="Lili" width="240px" title="Lili">
+## Features
+
+- Public profile stats endpoint: `GET /api/stats/:username`
+- Dynamic SVG card endpoint: `GET /api/card/:username`
+- Card variants and themes for README usage
+- Mobile-friendly profile page: `/:username`
+- Bun-first setup and CI/CD-ready workflows for Vercel
+
+## Quick Start
+
+```bash
+bun install
+bun run dev
+```
+
+Open: `http://localhost:3000`
+
+## API
+
+### `GET /api/stats/:username`
+
+Returns normalized public profile data (streak, XP, languages, etc).
+
+Example:
+
+```bash
+curl "https://duolingo-streak-tracker.vercel.app/api/stats/marlonangeli"
+```
+
+### `GET /api/card/:username`
+
+Returns an `image/svg+xml` card you can embed directly in Markdown.
+
+Supported query params:
+
+- `theme`: `duo | dark | light | sunset`
+- `variant`: `default | compact | minimal | badges`
+- `show`: comma-separated metrics (`streak,xp,languages,league,plus`)
+- `langLimit`: `1..6`
+- `title`: custom title
+
+Example:
+
+```text
+https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=duo&variant=default
+```
+
+## Embed in GitHub README
+
+```md
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=duo&variant=default)
+```
+
+## Notes about League Data
+
+Duolingo currently does not expose a reliable unauthenticated public league/rank endpoint.
+The API returns a stable `league` object with `available: false` when league data is not publicly available.
+
+## Scripts
+
+- `bun run dev`
+- `bun run lint`
+- `bun run typecheck`
+- `bun run build`
+- `bun run check`
+
+## License
+
+MIT

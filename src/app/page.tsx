@@ -1,88 +1,74 @@
 "use client";
 
-import React, { useState } from "react";
-import Card from "@/components/Card";
-import { User } from "@/models/user";
+import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-const Preview: React.FC<{ data: User | null }> = ({ data }) => {
-  return (
-    <div className="mt-4 p-4 border border-gray-300 rounded-lg">
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
-};
+const Home = () => {
+  const router = useRouter();
+  const [username, setUsername] = useState("marlonangeli");
 
-const Home: React.FC = () => {
-  const [username, setUsername] = useState<string>("");
-  const [userData, setUserData] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    const normalizedUsername = username.trim().toLowerCase();
 
-    setError(null);
-    setUserData(null);
-
-    try {
-      const response = await fetch(`/api/stats/${username}`);
-
-      if (!response.ok) {
-        setError("Usuário não encontrado");
-        return;
-      }
-
-      const data: User = await response.json();
-      setUserData(data);
-    } catch (error) {
-      console.error(error);
+    if (!normalizedUsername) {
+      return;
     }
+
+    router.push(`/${normalizedUsername}`);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full p-4">
-        <h1 className="text-2xl font-semibold mb-4">
-          Digite o nome de usuário:
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-10 sm:px-8">
+      <section className="duo-panel w-full p-6 sm:p-10">
+        <div className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-medium tracking-wide text-emerald-100">
+          Duolingo Streak Tracker
+        </div>
+
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-5xl">
+          Public Duolingo stats + SVG cards for GitHub README
         </h1>
-        <form onSubmit={handleSubmit}>
+
+        <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
+          Enter a Duolingo username to generate a profile page with API payloads,
+          embeddable markdown snippets, and SVG card variants ready for profile
+          READMEs.
+        </p>
+
+        <form className="mt-8 flex flex-col gap-3 sm:flex-row" onSubmit={onSubmit}>
           <input
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="border border-gray-300 rounded-md p-2 w-full text-black"
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="Duolingo username"
+            className="w-full rounded-xl border border-slate-500/50 bg-slate-900/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
           />
           <button
             type="submit"
-            className="mt-2 bg-blue-500 text-white rounded-md p-2 w-full"
+            className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
           >
-            Buscar
+            Open profile
           </button>
         </form>
 
-        {userData && (
-          <Card.Root>
-            <Card.Header
-              name={userData.name}
-              imageUrl={userData.picture}
-              languageFlags={userData.courses.map(
-                (course) => course.learningLanguage
-              )}
-              key={userData.id}
-            />
-            <Card.Content
-              streak={userData.streak}
-              totalXp={userData.totalXp}
-              league="Teste"
-              podiums={3}
-            />
-          </Card.Root>
-        )}
-
-        {userData && <Preview data={userData} />}
-
-        {error && <div className="text-red-500 mt-4">{error}</div>}
-      </div>
-    </div>
+        <div className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
+          <Link
+            href="/api/stats/marlonangeli"
+            className="rounded-lg border border-slate-600/50 bg-slate-900/40 px-4 py-3 hover:border-slate-400"
+          >
+            GET /api/stats/:user
+          </Link>
+          <Link
+            href="/api/card/marlonangeli?theme=duo&variant=default"
+            className="rounded-lg border border-slate-600/50 bg-slate-900/40 px-4 py-3 hover:border-slate-400"
+          >
+            GET /api/card/:user
+          </Link>
+        </div>
+      </section>
+    </main>
   );
 };
 

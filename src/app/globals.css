@@ -1,27 +1,34 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --background: #09131d;
+  --card: #122131;
+  --foreground: #f4faf7;
+  --muted: #99adbf;
+  --accent: #58cc02;
+  --accent-2: #1cb0f6;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background:
+    radial-gradient(circle at 15% 10%, #173149 0%, transparent 30%),
+    radial-gradient(circle at 80% 12%, #17353f 0%, transparent 25%),
+    var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+.duo-panel {
+  background: color-mix(in oklab, var(--card) 88%, black 12%);
+  border: 1px solid color-mix(in oklab, #ffffff 12%, transparent);
+  border-radius: 1.2rem;
+  box-shadow: 0 10px 35px color-mix(in oklab, #000000 40%, transparent);
 }

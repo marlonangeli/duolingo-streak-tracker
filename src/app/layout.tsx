@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Duolingo Streak Tracker",
-  description: "Estatísticas de usuário do Duolingo",
+  description:
+    "Public Duolingo stats API and embeddable SVG cards for GitHub profiles.",
 };
 
 export default function RootLayout({
