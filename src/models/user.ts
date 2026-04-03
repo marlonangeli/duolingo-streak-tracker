@@ -2,18 +2,18 @@ import { z } from "zod";
 import { courseSummarySchema, duolingoCourseSchema } from "./course";
 
 const streakWindowSchema = z.object({
-  length: z.number().int().nonnegative(),
+  length: z.coerce.number().int().nonnegative(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
 });
 
 export const duolingoUserSchema = z.object({
-  id: z.number().int(),
+  id: z.coerce.number().int(),
   username: z.string(),
   name: z.string(),
   picture: z.string().nullable().optional(),
-  totalXp: z.number().nonnegative(),
-  streak: z.number().int().nonnegative(),
+  totalXp: z.coerce.number().nonnegative(),
+  streak: z.coerce.number().int().nonnegative(),
   streakData: z
     .object({
       currentStreak: streakWindowSchema.optional(),
@@ -24,7 +24,7 @@ export const duolingoUserSchema = z.object({
   fromLanguage: z.string().nullable().optional(),
   learningLanguage: z.string().nullable().optional(),
   hasPlus: z.boolean().nullable().optional(),
-  creationDate: z.number().int().nullable().optional(),
+  creationDate: z.coerce.number().int().nullable().optional(),
 });
 
 export type DuolingoUser = z.infer<typeof duolingoUserSchema>;

@@ -6,6 +6,8 @@ import {
 } from "@/models/user";
 
 const DUOLINGO_BASE_URL = "https://www.duolingo.com/2017-06-30/users";
+const DUOLINGO_FIELDS =
+  "users{id,username,name,picture,totalXp,streak,streakData,courses{id,title,learningLanguage,fromLanguage,xp,crowns},currentCourseId,fromLanguage,learningLanguage,hasPlus,creationDate}";
 const DUOLINGO_USER_AGENT =
   "Mozilla/5.0 (compatible; DuolingoStreakTracker/2.0; +https://duolingo-streak-tracker.vercel.app)";
 
@@ -89,7 +91,9 @@ export const getUserStatsByUsername = async (username: string) => {
     return null;
   }
 
-  const url = `${DUOLINGO_BASE_URL}?username=${encodeURIComponent(normalizedUsername)}`;
+  const url = `${DUOLINGO_BASE_URL}?username=${encodeURIComponent(normalizedUsername)}&fields=${encodeURIComponent(
+    DUOLINGO_FIELDS
+  )}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -110,11 +114,18 @@ export const getUserStatsByUsername = async (username: string) => {
     throw new Error(`Duolingo request failed with status ${response.status}`);
   }
 
-  const payload = await response.json();
+  let payload: unknown;
+
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error("Duolingo payload is not valid JSON");
+  }
+
   const parsedPayload = duolingoUsersResponseSchema.safeParse(payload);
 
   if (!parsedPayload.success) {
-    throw new Error("Unexpected Duolingo payload format");
+    return null;
   }
 
   const [user] = parsedPayload.data.users;
@@ -123,5 +134,9 @@ export const getUserStatsByUsername = async (username: string) => {
     return null;
   }
 
-  return mapUser(user);
+  try {
+    return mapUser(user);
+  } catch {
+    return null;
+  }
 };

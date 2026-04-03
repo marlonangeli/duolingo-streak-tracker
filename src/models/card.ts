@@ -37,8 +37,16 @@ export type MetricKey = z.infer<typeof metricKeySchema>;
 export type CardOptions = z.infer<typeof cardOptionsSchema>;
 
 const parseNumber = (value: string | null) => {
+  if (value === null || value.trim() === "") {
+    return undefined;
+  }
+
   const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
+  if (!Number.isFinite(number) || number <= 0) {
+    return undefined;
+  }
+
+  return number;
 };
 
 export const parseCardOptions = (searchParams: URLSearchParams) => {
@@ -62,7 +70,7 @@ export const parseCardOptions = (searchParams: URLSearchParams) => {
     )
     .map((result) => result.data);
 
-  return cardOptionsSchema.parse({
+  const parsedOptions = cardOptionsSchema.safeParse({
     theme: cardThemeSchema.safeParse(themeInput).success
       ? themeInput
       : undefined,
@@ -73,4 +81,10 @@ export const parseCardOptions = (searchParams: URLSearchParams) => {
     langLimit: langLimitInput,
     metrics: parsedMetrics.length > 0 ? parsedMetrics : undefined,
   });
+
+  if (parsedOptions.success) {
+    return parsedOptions.data;
+  }
+
+  return cardOptionsSchema.parse({});
 };

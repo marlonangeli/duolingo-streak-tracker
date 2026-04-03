@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUserStatsByUsername } from "@/lib/duolingo/client";
+import type { UserStats } from "@/models/user";
 import {
   type CardTheme,
   type CardVariant,
@@ -13,6 +14,14 @@ type UserPageProps = {
   params: Promise<{ user: string }>;
   searchParams: Promise<{ theme?: string; variant?: string }>;
 };
+
+const CARD_IMAGE_DIMENSIONS: Record<CardVariant, { width: number; height: number }> =
+  {
+    default: { width: 760, height: 240 },
+    compact: { width: 600, height: 170 },
+    minimal: { width: 460, height: 110 },
+    badges: { width: 760, height: 140 },
+  };
 
 const themes: CardTheme[] = ["duo", "dark", "light", "sunset"];
 const variants: CardVariant[] = ["default", "compact", "minimal", "badges"];
@@ -47,15 +56,24 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
   const theme = parseTheme(themeInput);
   const variant = parseVariant(variantInput);
 
-  const userStats = await getUserStatsByUsername(user);
+  let userStats: UserStats | null = null;
+
+  try {
+    userStats = await getUserStatsByUsername(user);
+  } catch {
+    notFound();
+  }
 
   if (!userStats) {
     notFound();
   }
 
-  const cardPath = `/api/card/${userStats.username}?theme=${theme}&variant=${variant}`;
+  const profile = userStats;
+  const cardImageDimensions = CARD_IMAGE_DIMENSIONS[variant];
+
+  const cardPath = `/api/card/${profile.username}?theme=${theme}&variant=${variant}`;
   const markdownSnippet = getMarkdownSnippet({
-    username: userStats.username,
+    username: profile.username,
     theme,
     variant,
   });
@@ -67,9 +85,9 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           Profile
         </p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-          {userStats.name}
+          {profile.name}
         </h1>
-        <p className="mt-2 text-sm text-slate-300">@{userStats.username}</p>
+        <p className="mt-2 text-sm text-slate-300">@{profile.username}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -77,7 +95,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               Streak
             </p>
             <p className="mt-1 text-2xl font-bold text-white">
-              🔥 {userStats.streak}
+              🔥 {profile.streak}
             </p>
           </div>
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -85,7 +103,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               Total XP
             </p>
             <p className="mt-1 text-2xl font-bold text-white">
-              ⚡ {userStats.totalXp.toLocaleString("en-US")}
+              ⚡ {profile.totalXp.toLocaleString("en-US")}
             </p>
           </div>
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -93,7 +111,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               Languages
             </p>
             <p className="mt-1 text-2xl font-bold text-white">
-              🌍 {userStats.courses.length}
+              🌍 {profile.courses.length}
             </p>
           </div>
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -101,8 +119,8 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               League
             </p>
             <p className="mt-1 text-lg font-bold text-white">
-              {userStats.league.available
-                ? userStats.league.tier
+              {profile.league.available
+                ? profile.league.tier
                 : "Unavailable"}
             </p>
           </div>
@@ -116,7 +134,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           {themes.map((item) => (
             <Link
               key={item}
-              href={`/${userStats.username}?theme=${item}&variant=${variant}`}
+              href={`/${profile.username}?theme=${item}&variant=${variant}`}
               className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
                 item === theme
                   ? "border-emerald-300 bg-emerald-300/15 text-emerald-100"
@@ -132,7 +150,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           {variants.map((item) => (
             <Link
               key={item}
-              href={`/${userStats.username}?theme=${theme}&variant=${item}`}
+              href={`/${profile.username}?theme=${theme}&variant=${item}`}
               className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
                 item === variant
                   ? "border-cyan-300 bg-cyan-300/15 text-cyan-100"
@@ -147,7 +165,11 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
         <div className="mt-6 overflow-hidden rounded-2xl border border-slate-600/40 bg-slate-900/40 p-3">
           <Image
             src={cardPath}
-            alt={`Duolingo SVG card for ${userStats.username}`}
+            alt={`Duolingo SVG card for ${profile.username}`}
+            width={cardImageDimensions.width}
+            height={cardImageDimensions.height}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 760px"
+            unoptimized
             className="h-auto w-full"
           />
         </div>
@@ -165,7 +187,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
       <section className="duo-panel p-6 sm:p-8">
         <h2 className="text-xl font-bold text-white">Top languages</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {userStats.courses.slice(0, 6).map((course) => (
+          {profile.courses.slice(0, 6).map((course) => (
             <article
               key={course.id}
               className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4"

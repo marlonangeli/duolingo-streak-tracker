@@ -4,11 +4,11 @@ export const duolingoCourseSchema = z.object({
   authorId: z.string().optional(),
   title: z.string(),
   learningLanguage: z.string(),
-  xp: z.number().nonnegative().default(0),
+  xp: z.coerce.number().nonnegative().default(0),
   healthEnabled: z.boolean().optional(),
   fromLanguage: z.string(),
   id: z.string(),
-  crowns: z.number().nonnegative().optional(),
+  crowns: z.coerce.number().nonnegative().optional(),
 });
 
 export type DuolingoCourse = z.infer<typeof duolingoCourseSchema>;
