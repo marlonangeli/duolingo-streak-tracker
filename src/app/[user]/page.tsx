@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import MarkdownSnippet from "@/components/markdown-snippet";
 import { APP_UPDATED_LABEL, APP_VERSION } from "@/lib/app-meta";
 import { CARD_DIMENSIONS } from "@/lib/card/svg";
 import { getUserStatsByUsername } from "@/lib/duolingo/client";
@@ -65,8 +66,26 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
 
   const profile = userStats;
   const cardImageDimensions = CARD_DIMENSIONS[variant];
-  const duolingoProfileUrl = `https://www.duolingo.com/profile/${profile.username}`;
   const githubRepoUrl = "https://github.com/marlonangeli/duolingo-streak-tracker";
+
+  const cardImageSizes =
+    variant === "badges"
+      ? "(max-width: 640px) 92vw, 420px"
+      : "(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 760px";
+
+  const cardPreviewWrapperClass =
+    variant === "badges"
+      ? "mt-6 inline-flex max-w-full overflow-x-auto rounded-2xl border border-slate-600/40 bg-slate-900/40 p-3"
+      : "mt-6 overflow-hidden rounded-2xl border border-slate-600/40 bg-slate-900/40 p-3";
+
+  const cardPreviewImageClass =
+    variant === "badges"
+      ? "h-auto w-auto max-w-full rounded-xl"
+      : "h-auto w-full rounded-xl";
+
+  const statsGridColumnsClass = profile.league.available
+    ? "sm:grid-cols-4"
+    : "sm:grid-cols-3";
 
   const cardPath = `/api/card/${profile.username}?theme=${theme}&variant=${variant}`;
   const markdownSnippet = getMarkdownSnippet({
@@ -77,7 +96,16 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-      <section className="duo-panel p-6 sm:p-8">
+      <section className="duo-panel relative p-6 sm:p-8">
+        <a
+          href={githubRepoUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="duo-link duo-interactive absolute right-4 top-4 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white sm:text-xs"
+        >
+          Repository
+        </a>
+
         <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
           Profile
         </p>
@@ -87,23 +115,6 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
         <p className="mt-2 text-sm text-slate-300">@{profile.username}</p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <a
-            href={duolingoProfileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="duo-link duo-interactive px-3 py-1 text-xs font-bold uppercase tracking-wide"
-          >
-            Duo Profile
-          </a>
-          <a
-            href={githubRepoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="duo-link duo-interactive px-3 py-1 text-xs font-bold uppercase tracking-wide"
-          >
-            GitHub Repo
-          </a>
-
           <details className="group relative">
             <summary className="duo-link duo-interactive list-none cursor-pointer px-3 py-1 text-xs font-bold uppercase tracking-wide">
               ℹ Latest Update
@@ -114,7 +125,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           </details>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className={`mt-6 grid grid-cols-2 gap-3 ${statsGridColumnsClass}`}>
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
             <p className="text-xs uppercase tracking-wide text-slate-400">
               Streak
@@ -139,16 +150,14 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               🌍 {profile.courses.length}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              League
-            </p>
-            <p className="mt-1 text-lg font-bold text-white">
-              {profile.league.available
-                ? profile.league.tier
-                : "Unavailable"}
-            </p>
-          </div>
+          {profile.league.available ? (
+            <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-400">
+                League
+              </p>
+              <p className="mt-1 text-lg font-bold text-white">{profile.league.tier}</p>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -187,26 +196,19 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           ))}
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-600/40 bg-slate-900/40 p-3">
+        <div className={cardPreviewWrapperClass}>
           <Image
             src={cardPath}
             alt={`Duolingo SVG card for ${profile.username}`}
             width={cardImageDimensions.width}
             height={cardImageDimensions.height}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 760px"
+            sizes={cardImageSizes}
             unoptimized
-            className="h-auto w-full"
+            className={cardPreviewImageClass}
           />
         </div>
 
-        <div className="mt-4 rounded-xl border border-slate-600/40 bg-slate-900/60 p-4">
-          <p className="mb-2 text-sm font-semibold text-white">
-            Markdown snippet
-          </p>
-          <pre className="overflow-x-auto text-xs text-slate-200 sm:text-sm">
-            {markdownSnippet}
-          </pre>
-        </div>
+        <MarkdownSnippet snippet={markdownSnippet} />
       </section>
 
       <section className="duo-panel p-6 sm:p-8">

@@ -12,7 +12,6 @@ export const metricKeySchema = z.enum([
   "xp",
   "languages",
   "league",
-  "plus",
 ]);
 
 export const DEFAULT_METRICS = [
@@ -20,7 +19,6 @@ export const DEFAULT_METRICS = [
   "xp",
   "languages",
   "league",
-  "plus",
 ] as const;
 
 export const cardOptionsSchema = z.object({

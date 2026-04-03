@@ -22,7 +22,16 @@ const Home = () => {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-10 sm:px-8">
-      <section className="duo-panel w-full p-6 sm:p-10">
+      <section className="duo-panel relative w-full p-6 sm:p-10">
+        <a
+          href="https://github.com/marlonangeli/duolingo-streak-tracker"
+          target="_blank"
+          rel="noreferrer"
+          className="duo-link duo-interactive absolute right-4 top-4 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white sm:text-xs"
+        >
+          Repository
+        </a>
+
         <div className="duo-pill inline-flex px-3 py-1 text-xs font-bold tracking-wide text-white">
           Duolingo Streak Tracker
         </div>
@@ -52,25 +61,6 @@ const Home = () => {
             Open profile
           </button>
         </form>
-
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-white/90">
-          <a
-            href="https://www.duolingo.com/profile/marlonangeli"
-            target="_blank"
-            rel="noreferrer"
-            className="duo-link duo-interactive px-3 py-1"
-          >
-            Marlon on Duolingo
-          </a>
-          <a
-            href="https://github.com/marlonangeli/duolingo-streak-tracker"
-            target="_blank"
-            rel="noreferrer"
-            className="duo-link duo-interactive px-3 py-1"
-          >
-            Repository
-          </a>
-        </div>
 
         <div className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
           <Link
