@@ -1,4 +1,11 @@
-export const API_BASE_URL =
-  "https://www.duolingo.com/2017-06-30/users?username=";
-export const API_QUERY_PARAMETERS =
-  "&fields=users{username,streak,courses,id,name,picture,totalXp}";
+export const STATS_CACHE_CONTROL =
+  "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400";
+
+export const CARD_CACHE_CONTROL =
+  "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400";
+
+export const API_CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+} as const;

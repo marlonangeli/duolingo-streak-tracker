@@ -1,17 +1,73 @@
-import { Course } from "./course";
+import { z } from "zod";
+import { courseSummarySchema, duolingoCourseSchema } from "./course";
 
-export interface User {
-  picture: string;
-  name: string;
-  totalXp: number;
-  username: string;
-  courses: Course[];
-  streak: number;
-  currentCourseId: string;
-  creationDate: number;
-  id: number;
-}
+const streakWindowSchema = z.object({
+  length: z.number().int().nonnegative(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+});
 
-export interface UserData {
-  users: User[];
-}
+export const duolingoUserSchema = z.object({
+  id: z.number().int(),
+  username: z.string(),
+  name: z.string(),
+  picture: z.string().nullable().optional(),
+  totalXp: z.number().nonnegative(),
+  streak: z.number().int().nonnegative(),
+  streakData: z
+    .object({
+      currentStreak: streakWindowSchema.optional(),
+    })
+    .optional(),
+  courses: z.array(duolingoCourseSchema).default([]),
+  currentCourseId: z.string().nullable().optional(),
+  fromLanguage: z.string().nullable().optional(),
+  learningLanguage: z.string().nullable().optional(),
+  hasPlus: z.boolean().nullable().optional(),
+  creationDate: z.number().int().nullable().optional(),
+});
+
+export type DuolingoUser = z.infer<typeof duolingoUserSchema>;
+
+export const duolingoUsersResponseSchema = z.object({
+  users: z.array(duolingoUserSchema).default([]),
+});
+
+export const leagueInfoSchema = z.object({
+  available: z.boolean(),
+  tier: z.string().nullable(),
+  rank: z.number().int().nullable(),
+  pointsThisWeek: z.number().nullable(),
+  source: z.string().nullable(),
+  reason: z.string().nullable(),
+});
+
+export const languageStatSchema = z.object({
+  code: z.string(),
+  title: z.string(),
+  xp: z.number().nonnegative(),
+});
+
+export const userStatsSchema = z.object({
+  id: z.number().int(),
+  username: z.string(),
+  name: z.string(),
+  avatarUrl: z.string().url().nullable(),
+  totalXp: z.number().nonnegative(),
+  streak: z.number().int().nonnegative(),
+  streakWindow: streakWindowSchema.nullable(),
+  hasPlus: z.boolean().nullable(),
+  creationDate: z.number().int().nullable(),
+  currentCourseId: z.string().nullable(),
+  fromLanguage: z.string().nullable(),
+  learningLanguage: z.string().nullable(),
+  courses: z.array(courseSummarySchema),
+  topLanguages: z.array(languageStatSchema),
+  league: leagueInfoSchema,
+  meta: z.object({
+    source: z.string(),
+    fetchedAt: z.string(),
+  }),
+});
+
+export type UserStats = z.infer<typeof userStatsSchema>;

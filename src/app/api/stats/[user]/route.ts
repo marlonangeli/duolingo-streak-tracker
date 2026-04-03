@@ -1,41 +1,51 @@
 import { NextResponse } from "next/server";
-import { API_BASE_URL, API_QUERY_PARAMETERS } from "@/app/api/constants";
-import { User } from "@/models/user";
+import {
+  API_CORS_HEADERS,
+  STATS_CACHE_CONTROL,
+} from "@/app/api/constants";
+import { getUserStatsByUsername } from "@/lib/duolingo/client";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(
-  request: Request,
-  context: { params: { user: string } }
+  _request: Request,
+  context: { params: Promise<{ user: string }> }
 ) {
   const headers = {
-    "Content-Type": "application/json",
-    "Cache-Control": "no-cache",
+    ...API_CORS_HEADERS,
+    "Cache-Control": STATS_CACHE_CONTROL,
+    "Content-Type": "application/json; charset=utf-8",
   };
 
-  const user = context.params.user;
+  try {
+    const { user } = await context.params;
+    const userStats = await getUserStatsByUsername(user);
 
-  const response = await fetch(API_BASE_URL + user + API_QUERY_PARAMETERS, {
-    headers: {
-      accept: "application/json; charset=UTF-8",
-      "User-Agent":
-        "DuolingoStreakTracker/1.0.0 Dalvik/2.1.0 (Linux; U; Android 7.1.2; SM-G955U Build/NRD90M)",
-    },
-    method: "GET",
-    cache: "no-cache",
-  });
+    if (!userStats) {
+      return NextResponse.json(
+        {
+          error: "user_not_found",
+          message: `No public Duolingo profile found for @${user}`,
+        },
+        { status: 404, headers }
+      );
+    }
 
-  const body = await response.json();
-
-  if (body.users.length === 0) {
-    // return ErrorResponse user notfound
+    return NextResponse.json(userStats, { status: 200, headers });
+  } catch {
     return NextResponse.json(
-      { error: "user not found" },
-      { headers, status: 404 }
+      {
+        error: "upstream_unavailable",
+        message: "Duolingo data is temporarily unavailable",
+      },
+      { status: 502, headers }
     );
   }
+}
 
-  const userData: User = body.users[0];
-
-  return NextResponse.json(userData, { headers, status: 200 });
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: API_CORS_HEADERS,
+  });
 }
