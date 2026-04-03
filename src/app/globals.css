@@ -1,21 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09131d;
-  --card: #122131;
-  --foreground: #f4faf7;
-  --muted: #99adbf;
-  --accent: #58cc02;
-  --accent-2: #1cb0f6;
+  --duo-green: #58cc02;
+  --duo-blue: #1cb0f6;
+  --duo-red: #ff4b4b;
+  --duo-ink: #4b4b4b;
+  --duo-soft: #e5e5e5;
+
+  --background: #0d3a22;
+  --card: #104a2b;
+  --foreground: #ffffff;
+  --muted: #daf5c7;
+  --accent: var(--duo-green);
+  --accent-2: var(--duo-blue);
+
+  --ease-smooth: cubic-bezier(0.2, 0.85, 0.3, 1);
+  --duration-fast: 0.24s;
+  --duration-slow: 0.32s;
 }
 
 body {
   background:
-    radial-gradient(circle at 15% 10%, #173149 0%, transparent 30%),
-    radial-gradient(circle at 80% 12%, #17353f 0%, transparent 25%),
+    radial-gradient(circle at 15% 10%, #56cf2a 0%, transparent 30%),
+    radial-gradient(circle at 80% 12%, #1cb0f6 0%, transparent 24%),
+    radial-gradient(circle at 50% 100%, #0d5e4f 0%, transparent 35%),
     var(--background);
   color: var(--foreground);
   min-height: 100vh;
+  font-family: "Nunito", sans-serif;
 }
 
 * {
@@ -27,8 +39,48 @@ a {
 }
 
 .duo-panel {
-  background: color-mix(in oklab, var(--card) 88%, black 12%);
-  border: 1px solid color-mix(in oklab, #ffffff 12%, transparent);
+  background: color-mix(in oklab, var(--card) 86%, black 14%);
+  border: 2px solid color-mix(in oklab, #ffffff 20%, transparent);
   border-radius: 1.2rem;
-  box-shadow: 0 10px 35px color-mix(in oklab, #000000 40%, transparent);
+  box-shadow:
+    0 8px 0 color-mix(in oklab, #000000 20%, transparent),
+    0 18px 40px color-mix(in oklab, #000000 38%, transparent);
+  transition:
+    transform var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth);
+}
+
+.duo-interactive {
+  transition:
+    transform var(--duration-fast) var(--ease-smooth),
+    filter var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth),
+    background-color var(--duration-fast) var(--ease-smooth);
+}
+
+.duo-interactive:hover {
+  transform: translateY(-1px);
+}
+
+.duo-pill {
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklab, #ffffff 18%, transparent);
+  background: color-mix(in oklab, #000000 12%, transparent);
+}
+
+.duo-link {
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklab, #ffffff 18%, transparent);
+  background: color-mix(in oklab, #000000 15%, transparent);
+}
+
+.duo-link:hover {
+  border-color: color-mix(in oklab, var(--duo-blue) 70%, white 30%);
+  background: color-mix(in oklab, var(--duo-blue) 28%, transparent);
+}
+
+.duo-flag {
+  border-radius: 4px;
+  box-shadow: 0 2px 0 color-mix(in oklab, #000000 26%, transparent);
 }

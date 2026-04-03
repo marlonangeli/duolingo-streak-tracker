@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { APP_UPDATED_LABEL, APP_VERSION } from "@/lib/app-meta";
+import { CARD_DIMENSIONS } from "@/lib/card/svg";
 import { getUserStatsByUsername } from "@/lib/duolingo/client";
+import { getLanguageFlagCode } from "@/lib/language-flag-map";
 import type { UserStats } from "@/models/user";
 import {
   type CardTheme,
@@ -14,14 +17,6 @@ type UserPageProps = {
   params: Promise<{ user: string }>;
   searchParams: Promise<{ theme?: string; variant?: string }>;
 };
-
-const CARD_IMAGE_DIMENSIONS: Record<CardVariant, { width: number; height: number }> =
-  {
-    default: { width: 760, height: 240 },
-    compact: { width: 600, height: 170 },
-    minimal: { width: 460, height: 110 },
-    badges: { width: 760, height: 140 },
-  };
 
 const themes: CardTheme[] = ["duo", "dark", "light", "sunset"];
 const variants: CardVariant[] = ["default", "compact", "minimal", "badges"];
@@ -69,7 +64,9 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
   }
 
   const profile = userStats;
-  const cardImageDimensions = CARD_IMAGE_DIMENSIONS[variant];
+  const cardImageDimensions = CARD_DIMENSIONS[variant];
+  const duolingoProfileUrl = `https://www.duolingo.com/profile/${profile.username}`;
+  const githubRepoUrl = "https://github.com/marlonangeli/duolingo-streak-tracker";
 
   const cardPath = `/api/card/${profile.username}?theme=${theme}&variant=${variant}`;
   const markdownSnippet = getMarkdownSnippet({
@@ -88,6 +85,34 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           {profile.name}
         </h1>
         <p className="mt-2 text-sm text-slate-300">@{profile.username}</p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a
+            href={duolingoProfileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="duo-link duo-interactive px-3 py-1 text-xs font-bold uppercase tracking-wide"
+          >
+            Duo Profile
+          </a>
+          <a
+            href={githubRepoUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="duo-link duo-interactive px-3 py-1 text-xs font-bold uppercase tracking-wide"
+          >
+            GitHub Repo
+          </a>
+
+          <details className="group relative">
+            <summary className="duo-link duo-interactive list-none cursor-pointer px-3 py-1 text-xs font-bold uppercase tracking-wide">
+              ℹ Latest Update
+            </summary>
+            <div className="absolute left-0 top-9 z-20 min-w-max rounded-xl border border-white/20 bg-slate-900/95 px-3 py-2 text-xs text-slate-100 shadow-2xl">
+              Version <strong>v{APP_VERSION}</strong> · build {APP_UPDATED_LABEL}
+            </div>
+          </details>
+        </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -192,7 +217,28 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
               key={course.id}
               className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4"
             >
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-white">
+                {(() => {
+                  const flagCode = getLanguageFlagCode(course.learningLanguage);
+
+                  if (!flagCode) {
+                    return (
+                      <span className="inline-flex h-5 min-w-6 items-center justify-center rounded bg-white/15 px-1 text-[10px] font-black text-white">
+                        {course.learningLanguage.toUpperCase()}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <Image
+                      src={`/flags/${flagCode}.svg`}
+                      alt={`${course.title} flag`}
+                      width={24}
+                      height={18}
+                      className="duo-flag h-[18px] w-6 border border-white/25"
+                    />
+                  );
+                })()}
                 {course.title}
               </h3>
               <p className="mt-1 text-sm text-slate-300">

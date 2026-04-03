@@ -7,7 +7,7 @@ import {
 
 const DUOLINGO_BASE_URL = "https://www.duolingo.com/2017-06-30/users";
 const DUOLINGO_FIELDS =
-  "users{id,username,name,picture,totalXp,streak,streakData,courses{id,title,learningLanguage,fromLanguage,xp,crowns},currentCourseId,fromLanguage,learningLanguage,hasPlus,creationDate}";
+  "users{id,username,name,picture,totalXp,streak,streakData{currentStreak,longestStreak,previousStreak},courses{id,title,learningLanguage,fromLanguage,xp,crowns},currentCourseId,fromLanguage,learningLanguage,hasPlus,creationDate,xpGoal,timezone,timezoneOffset}";
 const DUOLINGO_USER_AGENT =
   "Mozilla/5.0 (compatible; DuolingoStreakTracker/2.0; +https://duolingo-streak-tracker.vercel.app)";
 
@@ -30,7 +30,9 @@ const normalizeAvatarUrl = (picture: string | null | undefined) => {
 };
 
 const mapUser = (user: DuolingoUser): UserStats => {
-  const sortedCourses = [...user.courses].sort((left, right) => right.xp - left.xp);
+  const sortedCourses = [...user.courses].sort(
+    (left, right) => right.xp - left.xp,
+  );
 
   const topLanguages = sortedCourses.slice(0, 5).map((course) => ({
     code: course.learningLanguage,
@@ -45,6 +47,7 @@ const mapUser = (user: DuolingoUser): UserStats => {
     avatarUrl: normalizeAvatarUrl(user.picture),
     totalXp: user.totalXp,
     streak: user.streak,
+    longestStreak: user.streakData?.longestStreak?.length ?? null,
     streakWindow: user.streakData?.currentStreak
       ? {
           length: user.streakData.currentStreak.length,
@@ -54,6 +57,9 @@ const mapUser = (user: DuolingoUser): UserStats => {
       : null,
     hasPlus: user.hasPlus ?? null,
     creationDate: user.creationDate ?? null,
+    xpGoal: user.xpGoal ?? null,
+    timezone: user.timezone ?? null,
+    timezoneOffset: user.timezoneOffset ?? null,
     currentCourseId: user.currentCourseId ?? null,
     fromLanguage: user.fromLanguage ?? null,
     learningLanguage: user.learningLanguage ?? null,
@@ -92,7 +98,7 @@ export const getUserStatsByUsername = async (username: string) => {
   }
 
   const url = `${DUOLINGO_BASE_URL}?username=${encodeURIComponent(normalizedUsername)}&fields=${encodeURIComponent(
-    DUOLINGO_FIELDS
+    DUOLINGO_FIELDS,
   )}`;
 
   const response = await fetch(url, {

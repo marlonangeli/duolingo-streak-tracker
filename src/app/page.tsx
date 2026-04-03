@@ -23,7 +23,7 @@ const Home = () => {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-10 sm:px-8">
       <section className="duo-panel w-full p-6 sm:p-10">
-        <div className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-medium tracking-wide text-emerald-100">
+        <div className="duo-pill inline-flex px-3 py-1 text-xs font-bold tracking-wide text-white">
           Duolingo Streak Tracker
         </div>
 
@@ -43,26 +43,45 @@ const Home = () => {
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             placeholder="Duolingo username"
-            className="w-full rounded-xl border border-slate-500/50 bg-slate-900/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
+            className="w-full rounded-xl border-2 border-white/30 bg-slate-900/35 px-4 py-3 text-white outline-none transition focus:border-sky-300"
           />
           <button
             type="submit"
-            className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
+            className="duo-interactive rounded-xl border-2 border-[#92e85e] bg-[#58cc02] px-5 py-3 font-black text-[#1a2d06] hover:brightness-110"
           >
             Open profile
           </button>
         </form>
 
+        <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-white/90">
+          <a
+            href="https://www.duolingo.com/profile/marlonangeli"
+            target="_blank"
+            rel="noreferrer"
+            className="duo-link duo-interactive px-3 py-1"
+          >
+            Marlon on Duolingo
+          </a>
+          <a
+            href="https://github.com/marlonangeli/duolingo-streak-tracker"
+            target="_blank"
+            rel="noreferrer"
+            className="duo-link duo-interactive px-3 py-1"
+          >
+            Repository
+          </a>
+        </div>
+
         <div className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
           <Link
             href="/api/stats/marlonangeli"
-            className="rounded-lg border border-slate-600/50 bg-slate-900/40 px-4 py-3 hover:border-slate-400"
+            className="duo-link duo-interactive rounded-lg px-4 py-3"
           >
             GET /api/stats/:user
           </Link>
           <Link
             href="/api/card/marlonangeli?theme=duo&variant=default"
-            className="rounded-lg border border-slate-600/50 bg-slate-900/40 px-4 py-3 hover:border-slate-400"
+            className="duo-link duo-interactive rounded-lg px-4 py-3"
           >
             GET /api/card/:user
           </Link>

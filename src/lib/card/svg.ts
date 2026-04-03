@@ -1,4 +1,4 @@
-import type { CardOptions, CardTheme, MetricKey } from "@/models/card";
+import type { CardOptions, CardTheme, CardVariant, MetricKey } from "@/models/card";
 import type { UserStats } from "@/models/user";
 
 type Palette = {
@@ -12,55 +12,81 @@ type Palette = {
   border: string;
 };
 
+type ChipLayout = {
+  startY: number;
+  maxRows: number;
+  maxChipWidth: number;
+};
+
+const FONT_FAMILY = "Nunito, Inter, Segoe UI, sans-serif";
+
 const THEME_PALETTES: Record<CardTheme, Palette> = {
   duo: {
-    background: "#0f1e2c",
-    card: "#122638",
-    text: "#f4faf7",
-    muted: "#9bb0c1",
-    accent: "#58cc02",
-    chip: "#1f3347",
-    chipText: "#f4faf7",
-    border: "#2d4359",
+    background: "#58CC02",
+    card: "#1CB0F6",
+    text: "#FFFFFF",
+    muted: "#E5F7FF",
+    accent: "#FFFFFF",
+    chip: "#0F7DB3",
+    chipText: "#FFFFFF",
+    border: "#5FCBFF",
   },
   dark: {
-    background: "#0a0a0f",
-    card: "#131320",
-    text: "#f6f7fb",
-    muted: "#a5a8ba",
-    accent: "#7f5af0",
-    chip: "#1a1a2d",
-    chipText: "#f6f7fb",
-    border: "#2b2b41",
+    background: "#1F2937",
+    card: "#111827",
+    text: "#F9FAFB",
+    muted: "#9CA3AF",
+    accent: "#58CC02",
+    chip: "#0B1220",
+    chipText: "#F9FAFB",
+    border: "#374151",
   },
   light: {
-    background: "#f4f7fb",
-    card: "#ffffff",
-    text: "#111827",
-    muted: "#6b7280",
-    accent: "#1cb0f6",
-    chip: "#eef2f9",
-    chipText: "#111827",
-    border: "#d7deea",
+    background: "#F4F7FB",
+    card: "#FFFFFF",
+    text: "#4B4B4B",
+    muted: "#777777",
+    accent: "#58CC02",
+    chip: "#ECF7FF",
+    chipText: "#4B4B4B",
+    border: "#E5E5E5",
   },
   sunset: {
-    background: "#251235",
-    card: "#341b4a",
-    text: "#fff5fd",
-    muted: "#f4b9df",
-    accent: "#ff9600",
-    chip: "#4a255f",
-    chipText: "#fff5fd",
-    border: "#72428f",
+    background: "#FF6D5A",
+    card: "#FFB020",
+    text: "#FFFFFF",
+    muted: "#FFF4DB",
+    accent: "#FFFFFF",
+    chip: "#D14E3D",
+    chipText: "#FFFFFF",
+    border: "#FFB9AF",
   },
 };
 
-const CARD_DIMENSIONS = {
+export const CARD_DIMENSIONS: Record<CardVariant, { width: number; height: number }> = {
   default: { width: 760, height: 240 },
   compact: { width: 600, height: 170 },
   minimal: { width: 460, height: 110 },
   badges: { width: 760, height: 140 },
-} as const;
+};
+
+const CHIP_LAYOUT_BY_VARIANT: Record<Exclude<CardVariant, "minimal">, ChipLayout> = {
+  default: {
+    startY: 126,
+    maxRows: 3,
+    maxChipWidth: 280,
+  },
+  compact: {
+    startY: 98,
+    maxRows: 2,
+    maxChipWidth: 220,
+  },
+  badges: {
+    startY: 72,
+    maxRows: 2,
+    maxChipWidth: 260,
+  },
+};
 
 const escapeXml = (input: string) =>
   input
@@ -91,51 +117,99 @@ const getInitial = (name: string) => {
   return firstChar?.toUpperCase() ?? "D";
 };
 
+const buildChip = (params: {
+  x: number;
+  y: number;
+  width: number;
+  label: string;
+  palette: Palette;
+}) => {
+  const { x, y, width, label, palette } = params;
+  const safeLabel = escapeXml(label);
+
+  return `
+    <g>
+      <rect x="${x}" y="${y}" width="${width}" height="30" rx="15" fill="${palette.chip}" stroke="${palette.border}" />
+      <text x="${x + 16}" y="${y + 20}" font-size="14" fill="${palette.chipText}" font-family="${FONT_FAMILY}">${safeLabel}</text>
+    </g>
+  `;
+};
+
 const renderChips = ({
   labels,
   startX,
-  startY,
   maxWidth,
   palette,
+  layout,
 }: {
   labels: string[];
   startX: number;
-  startY: number;
   maxWidth: number;
   palette: Palette;
+  layout: ChipLayout;
 }) => {
   const chipHeight = 30;
   const gap = 8;
 
   let cursorX = startX;
-  let cursorY = startY;
+  let cursorY = layout.startY;
+  let rowIndex = 0;
+  let placed = 0;
+  const chips: string[] = [];
 
-  const chips = labels
-    .map((label) => {
-      const escapedLabel = escapeXml(label);
-      const width = Math.max(104, label.length * 7 + 32);
+  for (const label of labels) {
+    const width = Math.min(layout.maxChipWidth, Math.max(104, label.length * 7 + 32));
 
-      if (cursorX + width > startX + maxWidth) {
-        cursorX = startX;
-        cursorY += chipHeight + gap;
-      }
+    if (cursorX + width > startX + maxWidth) {
+      rowIndex += 1;
+      cursorX = startX;
+      cursorY += chipHeight + gap;
+    }
 
-      const chip = `
-        <g>
-          <rect x="${cursorX}" y="${cursorY}" width="${width}" height="${chipHeight}" rx="15" fill="${palette.chip}" stroke="${palette.border}" />
-          <text x="${cursorX + 16}" y="${cursorY + 20}" font-size="14" fill="${palette.chipText}" font-family="Inter, Segoe UI, sans-serif">${escapedLabel}</text>
-        </g>
-      `;
+    if (rowIndex >= layout.maxRows) {
+      break;
+    }
 
-      cursorX += width + gap;
-      return chip;
-    })
-    .join("\n");
+    chips.push(
+      buildChip({
+        x: cursorX,
+        y: cursorY,
+        width,
+        label,
+        palette,
+      })
+    );
 
-  return {
-    chips,
-    usedHeight: cursorY + chipHeight - startY,
-  };
+    cursorX += width + gap;
+    placed += 1;
+  }
+
+  const remaining = labels.length - placed;
+
+  if (remaining > 0 && rowIndex < layout.maxRows) {
+    const moreLabel = `+${remaining} more`;
+    const width = Math.max(104, moreLabel.length * 7 + 32);
+
+    if (cursorX + width > startX + maxWidth) {
+      rowIndex += 1;
+      cursorX = startX;
+      cursorY += chipHeight + gap;
+    }
+
+    if (rowIndex < layout.maxRows) {
+      chips.push(
+        buildChip({
+          x: cursorX,
+          y: cursorY,
+          width,
+          label: moreLabel,
+          palette,
+        })
+      );
+    }
+  }
+
+  return chips.join("\n");
 };
 
 const renderMinimal = ({
@@ -151,10 +225,65 @@ const renderMinimal = ({
   const username = escapeXml(stats.username);
 
   return `
-    <text x="24" y="35" font-size="18" font-weight="700" fill="${palette.text}" font-family="Inter, Segoe UI, sans-serif">${title}</text>
-    <text x="24" y="62" font-size="14" fill="${palette.muted}" font-family="Inter, Segoe UI, sans-serif">@${username}</text>
-    <text x="24" y="90" font-size="16" fill="${palette.text}" font-family="Inter, Segoe UI, sans-serif">🔥 ${stats.streak.toLocaleString("en-US")} · ⚡ ${formatNumber(stats.totalXp)} XP · 🌍 ${stats.courses.length}</text>
+    <text x="24" y="35" font-size="18" font-weight="700" fill="${palette.text}" font-family="${FONT_FAMILY}">${title}</text>
+    <text x="24" y="62" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${username}</text>
+    <text x="24" y="90" font-size="16" fill="${palette.text}" font-family="${FONT_FAMILY}">🔥 ${stats.streak.toLocaleString("en-US")} · ⚡ ${formatNumber(stats.totalXp)} XP · 🌍 ${stats.courses.length}</text>
   `;
+};
+
+const renderAvatar = ({
+  stats,
+  palette,
+}: {
+  stats: UserStats;
+  palette: Palette;
+}) => {
+  const initial = escapeXml(getInitial(stats.name));
+
+  if (!stats.avatarUrl) {
+    return {
+      defs: "",
+      avatar: `
+        <circle cx="64" cy="62" r="32" fill="${palette.accent}" />
+        <text x="64" y="74" text-anchor="middle" font-size="28" font-weight="700" fill="${palette.card}" font-family="${FONT_FAMILY}">${initial}</text>
+      `,
+    };
+  }
+
+  return {
+    defs: `
+      <clipPath id="avatar-clip">
+        <circle cx="64" cy="62" r="32" />
+      </clipPath>
+    `,
+    avatar: `
+      <circle cx="64" cy="62" r="32" fill="${palette.chip}" stroke="${palette.border}" stroke-width="2" />
+      <image href="${escapeXml(stats.avatarUrl)}" x="32" y="30" width="64" height="64" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatar-clip)" />
+    `,
+  };
+};
+
+const pickLabelsByVariant = (
+  stats: UserStats,
+  options: CardOptions,
+  variant: Exclude<CardVariant, "minimal">
+) => {
+  const selectedMetrics = getMetricsText(stats);
+  const metricLabels = options.metrics.map((metric) => selectedMetrics[metric]);
+
+  const languageLabels = stats.topLanguages
+    .slice(0, options.langLimit)
+    .map((language) => `${language.code.toUpperCase()} · ${formatNumber(language.xp)} XP`);
+
+  if (variant === "compact") {
+    return metricLabels.slice(0, 3);
+  }
+
+  if (variant === "badges") {
+    return metricLabels.slice(0, 5);
+  }
+
+  return [...metricLabels, ...languageLabels];
 };
 
 const renderCardBody = (stats: UserStats, options: CardOptions) => {
@@ -165,61 +294,56 @@ const renderCardBody = (stats: UserStats, options: CardOptions) => {
   const name = escapeXml(stats.name);
   const username = escapeXml(stats.username);
 
-  const selectedMetrics = getMetricsText(stats);
-  const labels = options.metrics.map((metric) => selectedMetrics[metric]);
-
-  const languageLabels = stats.topLanguages
-    .slice(0, options.langLimit)
-    .map((language) => `${language.code.toUpperCase()} · ${formatNumber(language.xp)} XP`);
-
-  const chipData = renderChips({
-    labels: [...labels, ...languageLabels],
-    startX: 24,
-    startY: options.variant === "compact" ? 98 : 126,
-    maxWidth: dimensions.width - 48,
-    palette,
-  });
-
   if (options.variant === "minimal") {
     return {
       dimensions,
       palette,
+      defs: "",
       body: renderMinimal({ stats, options, palette }),
     };
   }
+
+  const layout = CHIP_LAYOUT_BY_VARIANT[options.variant];
+  const labels = pickLabelsByVariant(stats, options, options.variant);
+  const chips = renderChips({
+    labels,
+    startX: 24,
+    maxWidth: dimensions.width - 48,
+    palette,
+    layout,
+  });
 
   if (options.variant === "badges") {
     return {
       dimensions,
       palette,
+      defs: "",
       body: `
-        <text x="24" y="36" font-size="18" font-weight="700" fill="${palette.text}" font-family="Inter, Segoe UI, sans-serif">${title}</text>
-        <text x="24" y="62" font-size="14" fill="${palette.muted}" font-family="Inter, Segoe UI, sans-serif">@${username}</text>
-        ${chipData.chips}
+        <text x="24" y="36" font-size="18" font-weight="700" fill="${palette.text}" font-family="${FONT_FAMILY}">${title}</text>
+        <text x="24" y="60" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${username}</text>
+        ${chips}
       `,
     };
   }
 
+  const avatar = renderAvatar({ stats, palette });
+
   return {
     dimensions,
     palette,
+    defs: avatar.defs,
     body: `
-      <circle cx="64" cy="62" r="32" fill="${palette.accent}" />
-      <text x="64" y="74" text-anchor="middle" font-size="28" font-weight="700" fill="${palette.card}" font-family="Inter, Segoe UI, sans-serif">${escapeXml(
-        getInitial(stats.name)
-      )}</text>
-
-      <text x="112" y="44" font-size="18" font-weight="700" fill="${palette.text}" font-family="Inter, Segoe UI, sans-serif">${title}</text>
-      <text x="112" y="70" font-size="17" fill="${palette.text}" font-family="Inter, Segoe UI, sans-serif">${name}</text>
-      <text x="112" y="92" font-size="14" fill="${palette.muted}" font-family="Inter, Segoe UI, sans-serif">@${username}</text>
-
-      ${chipData.chips}
+      ${avatar.avatar}
+      <text x="112" y="42" font-size="18" font-weight="700" fill="${palette.text}" font-family="${FONT_FAMILY}">${title}</text>
+      <text x="112" y="68" font-size="17" fill="${palette.text}" font-family="${FONT_FAMILY}">${name}</text>
+      <text x="112" y="90" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${username}</text>
+      ${chips}
     `,
   };
 };
 
 export const renderUserCardSvg = (stats: UserStats, options: CardOptions) => {
-  const { dimensions, palette, body } = renderCardBody(stats, options);
+  const { dimensions, palette, defs, body } = renderCardBody(stats, options);
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}" viewBox="0 0 ${dimensions.width} ${dimensions.height}" role="img" aria-label="Duolingo statistics card for ${escapeXml(
@@ -230,6 +354,7 @@ export const renderUserCardSvg = (stats: UserStats, options: CardOptions) => {
       <stop offset="0%" stop-color="${palette.background}" />
       <stop offset="100%" stop-color="${palette.card}" />
     </linearGradient>
+    ${defs}
   </defs>
 
   <rect x="0" y="0" width="${dimensions.width}" height="${dimensions.height}" rx="18" fill="url(#duo-bg)" />
@@ -245,9 +370,9 @@ export const renderMissingUserSvg = (username: string) => {
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="560" height="140" viewBox="0 0 560 140" role="img" aria-label="Duolingo user not found">
-  <rect x="0" y="0" width="560" height="140" rx="16" fill="#101828" />
-  <text x="24" y="52" font-size="20" font-weight="700" fill="#f9fafb" font-family="Inter, Segoe UI, sans-serif">Duolingo user not found</text>
-  <text x="24" y="82" font-size="14" fill="#9ca3af" font-family="Inter, Segoe UI, sans-serif">We could not load public stats for @${safeUsername}</text>
+  <rect x="0" y="0" width="560" height="140" rx="16" fill="#1F2937" />
+  <text x="24" y="52" font-size="20" font-weight="700" fill="#F9FAFB" font-family="${FONT_FAMILY}">Duolingo user not found</text>
+  <text x="24" y="82" font-size="14" fill="#D1D5DB" font-family="${FONT_FAMILY}">We could not load public stats for @${safeUsername}</text>
 </svg>
 `.trim();
 };

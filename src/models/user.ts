@@ -17,6 +17,8 @@ export const duolingoUserSchema = z.object({
   streakData: z
     .object({
       currentStreak: streakWindowSchema.optional(),
+      longestStreak: streakWindowSchema.optional(),
+      previousStreak: streakWindowSchema.optional(),
     })
     .optional(),
   courses: z.array(duolingoCourseSchema).default([]),
@@ -25,6 +27,9 @@ export const duolingoUserSchema = z.object({
   learningLanguage: z.string().nullable().optional(),
   hasPlus: z.boolean().nullable().optional(),
   creationDate: z.coerce.number().int().nullable().optional(),
+  xpGoal: z.coerce.number().int().nonnegative().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  timezoneOffset: z.coerce.number().nullable().optional(),
 });
 
 export type DuolingoUser = z.infer<typeof duolingoUserSchema>;
@@ -55,9 +60,13 @@ export const userStatsSchema = z.object({
   avatarUrl: z.string().url().nullable(),
   totalXp: z.number().nonnegative(),
   streak: z.number().int().nonnegative(),
+  longestStreak: z.number().int().nonnegative().nullable(),
   streakWindow: streakWindowSchema.nullable(),
   hasPlus: z.boolean().nullable(),
   creationDate: z.number().int().nullable(),
+  xpGoal: z.number().int().nonnegative().nullable(),
+  timezone: z.string().nullable(),
+  timezoneOffset: z.number().nullable(),
   currentCourseId: z.string().nullable(),
   fromLanguage: z.string().nullable(),
   learningLanguage: z.string().nullable(),
