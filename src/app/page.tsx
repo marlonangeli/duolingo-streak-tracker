@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -36,15 +37,30 @@ const Home = () => {
           Duolingo Streak Tracker
         </div>
 
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-5xl">
-          Public Duolingo stats + SVG cards for GitHub README
-        </h1>
+        <div className="mt-5 grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
+              Public Duolingo stats + SVG cards for GitHub README
+            </h1>
 
-        <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
-          Enter a Duolingo username to generate a profile page with API payloads,
-          embeddable markdown snippets, and SVG card variants ready for profile
-          READMEs.
-        </p>
+            <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
+              Enter a Duolingo username to generate a profile page with API
+              payloads, embeddable markdown snippets, and SVG card variants
+              ready for profile READMEs.
+            </p>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-xs lg:max-w-sm">
+            <Image
+              src="/brand/characters/duo-hello.svg"
+              alt="Duolingo mascot"
+              width={320}
+              height={306}
+              priority
+              className="mx-auto h-auto w-full"
+            />
+          </div>
+        </div>
 
         <form className="mt-8 flex flex-col gap-3 sm:flex-row" onSubmit={onSubmit}>
           <input

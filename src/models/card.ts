@@ -1,6 +1,15 @@
 import { z } from "zod";
 
-export const cardThemeSchema = z.enum(["duo", "dark", "light", "sunset"]);
+export const cardThemeSchema = z.enum([
+  "duo",
+  "eel",
+  "polar",
+  "cardinal",
+  "fox",
+  "owl",
+  "macaw",
+  "butterfly",
+]);
 export const cardVariantSchema = z.enum([
   "default",
   "compact",

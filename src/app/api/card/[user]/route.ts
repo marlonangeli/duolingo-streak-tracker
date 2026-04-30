@@ -21,6 +21,20 @@ const toDataUri = (mimeType: string, bytes: ArrayBuffer | ArrayBufferView) => {
   return `data:${mimeType};base64,${buffer.toString("base64")}`;
 };
 
+const buildLocalAssetDataUri = async (
+  relativePath: string,
+  mimeType: string,
+) => {
+  try {
+    const bytes = await readFile(
+      path.join(/* turbopackIgnore: true */ process.cwd(), relativePath),
+    );
+    return toDataUri(mimeType, bytes);
+  } catch {
+    return null;
+  }
+};
+
 const buildAvatarDataUri = async (avatarUrl: string | null) => {
   if (!avatarUrl) {
     return null;
@@ -59,13 +73,18 @@ const buildFlagDataUris = async (languageCodes: string[]) => {
     new Set(
       languageCodes
         .map((languageCode) => getLanguageFlagCode(languageCode))
-        .filter((countryCode): countryCode is string => Boolean(countryCode))
-    )
+        .filter((countryCode): countryCode is string => Boolean(countryCode)),
+    ),
   );
 
   const pairs = await Promise.all(
     uniqueCountryCodes.map(async (countryCode) => {
-      const filePath = path.join(process.cwd(), "public", "flags", `${countryCode}.svg`);
+      const filePath = path.join(
+        /* turbopackIgnore: true */ process.cwd(),
+        "public",
+        "flags",
+        `${countryCode}.svg`,
+      );
 
       try {
         const bytes = await readFile(filePath);
@@ -73,26 +92,51 @@ const buildFlagDataUris = async (languageCodes: string[]) => {
       } catch {
         return [countryCode, ""] as const;
       }
-    })
+    }),
   );
 
   return Object.fromEntries(pairs.filter(([, value]) => value.length > 0));
 };
 
+const buildSharedCardAssets = async () => {
+  const [
+    duoIconDataUri,
+    errorIllustrationDataUri,
+    streakIconDataUri,
+    xpIconDataUri,
+  ] = await Promise.all([
+    buildLocalAssetDataUri("public/icon.svg", "image/svg+xml"),
+    buildLocalAssetDataUri(
+      "public/brand/characters/duo-error.svg",
+      "image/svg+xml",
+    ),
+    buildLocalAssetDataUri("public/brand/icons/streak.svg", "image/svg+xml"),
+    buildLocalAssetDataUri("public/brand/icons/xp.svg", "image/svg+xml"),
+  ]);
+
+  return {
+    duoIconDataUri,
+    errorIllustrationDataUri,
+    streakIconDataUri,
+    xpIconDataUri,
+  };
+};
+
 export async function GET(
   request: Request,
-  context: { params: Promise<{ user: string }> }
+  context: { params: Promise<{ user: string }> },
 ) {
   const { user } = await context.params;
 
   const searchParams = new URL(request.url).searchParams;
   const options = parseCardOptions(searchParams);
+  const sharedAssets = await buildSharedCardAssets();
 
   try {
     const userStats = await getUserStatsByUsername(user);
 
     if (!userStats) {
-      return new Response(renderMissingUserSvg(user), {
+      return new Response(renderMissingUserSvg(user, sharedAssets), {
         status: 404,
         headers: {
           ...API_CORS_HEADERS,
@@ -104,10 +148,13 @@ export async function GET(
 
     const [avatarDataUri, flagDataUris] = await Promise.all([
       buildAvatarDataUri(userStats.avatarUrl),
-      buildFlagDataUris(userStats.topLanguages.map((language) => language.code)),
+      buildFlagDataUris(
+        userStats.topLanguages.map((language) => language.code),
+      ),
     ]);
 
     const svg = renderUserCardSvg(userStats, options, {
+      ...sharedAssets,
       avatarDataUri,
       flagDataUris,
     });
@@ -121,7 +168,7 @@ export async function GET(
       },
     });
   } catch {
-    return new Response(renderMissingUserSvg(user), {
+    return new Response(renderMissingUserSvg(user, sharedAssets), {
       status: 502,
       headers: {
         ...API_CORS_HEADERS,

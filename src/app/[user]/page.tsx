@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MarkdownSnippet from "@/components/markdown-snippet";
-import { APP_UPDATED_LABEL, APP_VERSION } from "@/lib/app-meta";
+import { CARD_THEME_META, CARD_THEME_ORDER } from "@/lib/card-theme";
 import { CARD_DIMENSIONS } from "@/lib/card/svg";
 import { getUserStatsByUsername } from "@/lib/duolingo/client";
 import { getLanguageFlagCode } from "@/lib/language-flag-map";
@@ -19,7 +19,7 @@ type UserPageProps = {
   searchParams: Promise<{ theme?: string; variant?: string }>;
 };
 
-const themes: CardTheme[] = ["duo", "dark", "light", "sunset"];
+const themes: CardTheme[] = CARD_THEME_ORDER;
 const variants: CardVariant[] = ["default", "compact", "minimal", "badges"];
 
 const parseTheme = (input?: string): CardTheme => {
@@ -67,11 +67,12 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
   const profile = userStats;
   const cardImageDimensions = CARD_DIMENSIONS[variant];
   const githubRepoUrl = "https://github.com/marlonangeli/duolingo-streak-tracker";
+  const previewWidth = variant === "badges" ? 320 : cardImageDimensions.width;
 
   const cardImageSizes =
     variant === "badges"
-      ? "(max-width: 640px) 92vw, 420px"
-      : "(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 760px";
+      ? "(max-width: 640px) 92vw, 320px"
+      : `(max-width: 640px) 100vw, (max-width: 1024px) 90vw, ${previewWidth}px`;
 
   const cardPreviewWrapperClass =
     variant === "badges"
@@ -113,17 +114,6 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
           {profile.name}
         </h1>
         <p className="mt-2 text-sm text-slate-300">@{profile.username}</p>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <details className="group relative">
-            <summary className="duo-link duo-interactive list-none cursor-pointer px-3 py-1 text-xs font-bold uppercase tracking-wide">
-              ℹ Latest Update
-            </summary>
-            <div className="absolute left-0 top-9 z-20 min-w-max rounded-xl border border-white/20 bg-slate-900/95 px-3 py-2 text-xs text-slate-100 shadow-2xl">
-              Version <strong>v{APP_VERSION}</strong> · build {APP_UPDATED_LABEL}
-            </div>
-          </details>
-        </div>
 
         <div className={`mt-6 grid grid-cols-2 gap-3 ${statsGridColumnsClass}`}>
           <div className="rounded-xl border border-slate-600/40 bg-slate-900/50 p-4">
@@ -169,13 +159,17 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
             <Link
               key={item}
               href={`/${profile.username}?theme=${item}&variant=${variant}`}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+              className={`duo-interactive inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
                 item === theme
-                  ? "border-emerald-300 bg-emerald-300/15 text-emerald-100"
-                  : "border-slate-600 bg-slate-900/40 text-slate-200"
+                  ? "border-white/80 bg-white/18 text-white"
+                  : "border-white/20 bg-black/10 text-white/90"
               }`}
             >
-              theme: {item}
+              <span
+                className="inline-block size-3 rounded-full border border-white/40"
+                style={{ backgroundColor: CARD_THEME_META[item].swatch }}
+              />
+              {CARD_THEME_META[item].label}
             </Link>
           ))}
         </div>
