@@ -16,9 +16,9 @@ export const duolingoUserSchema = z.object({
   streak: z.coerce.number().int().nonnegative(),
   streakData: z
     .object({
-      currentStreak: streakWindowSchema.optional(),
-      longestStreak: streakWindowSchema.optional(),
-      previousStreak: streakWindowSchema.optional(),
+      currentStreak: streakWindowSchema.nullable().optional(),
+      longestStreak: streakWindowSchema.nullable().optional(),
+      previousStreak: streakWindowSchema.nullable().optional(),
     })
     .optional(),
   courses: z.array(duolingoCourseSchema).default([]),
