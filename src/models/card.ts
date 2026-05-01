@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const cardThemeSchema = z.enum([
-  "duo",
-  "eel",
   "polar",
+  "eel",
+  "duo",
   "cardinal",
   "fox",
   "owl",
@@ -31,7 +31,7 @@ export const DEFAULT_METRICS = [
 ] as const;
 
 export const cardOptionsSchema = z.object({
-  theme: cardThemeSchema.default("duo"),
+  theme: cardThemeSchema.default("polar"),
   variant: cardVariantSchema.default("default"),
   title: z.string().trim().min(1).max(48).optional(),
   langLimit: z.number().int().min(1).max(6).default(3),

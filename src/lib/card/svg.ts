@@ -9,6 +9,7 @@ type RenderAssets = {
   errorIllustrationDataUri?: string | null;
   flagDataUris?: Record<string, string>;
   streakIconDataUri?: string | null;
+  streakInactiveIconDataUri?: string | null;
   xpIconDataUri?: string | null;
 };
 
@@ -21,17 +22,26 @@ type RenderResult = {
   palette: Palette;
 };
 
+type SvgFragment = {
+  defs: string;
+  markup: string;
+};
+
 export const CARD_DIMENSIONS: Record<
   CardVariant,
   { height: number; width: number }
 > = {
-  default: { width: 680, height: 232 },
-  compact: { width: 540, height: 192 },
+  default: { width: 620, height: 216 },
+  compact: { width: 500, height: 184 },
   minimal: { width: 460, height: 126 },
   badges: { width: 300, height: 64 },
 };
 
 const FONT_FAMILY = "Nunito, Inter, Segoe UI, sans-serif";
+const CARD_OUTER_RADIUS = 16;
+const CARD_INNER_RADIUS = 15;
+const METRIC_CARD_RADIUS = 14;
+const FLAG_RADIUS = 4;
 
 const escapeXml = (input: string) =>
   input
@@ -46,6 +56,45 @@ const formatCompactNumber = (value: number) =>
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+
+const formatPlainNumber = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    useGrouping: false,
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const getYearFromDate = (value: string | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsedDate = new Date(value);
+
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return String(parsedDate.getUTCFullYear());
+  }
+
+  return value.match(/\d{4}/)?.[0] ?? null;
+};
+
+const getStreakSinceLabel = (stats: UserStats) => {
+  const year = getYearFromDate(stats.streakWindow?.startDate);
+
+  return year ? `Since ${year}` : undefined;
+};
+
+const getFlagStripWidth = (flagCount: number, remaining: number) => {
+  if (flagCount === 0) {
+    return 0;
+  }
+
+  return flagCount * 28 + Math.max(flagCount - 1, 0) * 8 + (remaining > 0 ? 34 : 0);
+};
+
+const getStreakIcon = (assets: RenderAssets, streak: number) =>
+  streak > 0
+    ? assets.streakIconDataUri
+    : (assets.streakInactiveIconDataUri ?? assets.streakIconDataUri);
 
 const renderImage = (params: {
   extra?: string;
@@ -142,6 +191,8 @@ const renderTitleLockup = (params: {
 };
 
 const renderMetricCard = (params: {
+  detail?: string;
+  height?: number;
   icon?: string | null;
   label: string;
   palette: Palette;
@@ -151,19 +202,39 @@ const renderMetricCard = (params: {
   x: number;
   y: number;
 }) => {
-  const { icon, label, palette, suffix, value, width, x, y } = params;
+  const {
+    detail,
+    height = 56,
+    icon,
+    label,
+    palette,
+    suffix,
+    value,
+    width,
+    x,
+    y,
+  } = params;
+  const hasDetail = Boolean(detail);
   const textX = icon ? x + 44 : x + 16;
+  const iconY = y + (hasDetail ? 14 : height > 56 ? 16 : 14);
+  const valueY = y + (hasDetail ? 40 : height > 56 ? 43 : 41);
+  const detailY = y + height - 10;
 
   return `
     <g>
-      <rect x="${x}" y="${y}" width="${width}" height="56" rx="18" fill="${palette.chip}" stroke="${palette.chipBorder}" stroke-width="2" />
-      ${renderImage({ href: icon, x: x + 14, y: y + 14, width: 20, height: 24 })}
+      <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${METRIC_CARD_RADIUS}" fill="${palette.chip}" stroke="${palette.chipBorder}" stroke-width="2" />
+      ${renderImage({ href: icon, x: x + 14, y: iconY, width: 20, height: 24 })}
       <text x="${textX}" y="${y + 18}" font-size="11" font-weight="800" fill="${palette.muted}" font-family="${FONT_FAMILY}" letter-spacing="0.45">${escapeXml(label)}</text>
-      <text x="${textX}" y="${y + 41}" font-size="21" font-weight="800" fill="${palette.chipText}" font-family="${FONT_FAMILY}">${escapeXml(value)}${
+      <text x="${textX}" y="${valueY}" font-size="21" font-weight="800" fill="${palette.chipText}" font-family="${FONT_FAMILY}">${escapeXml(value)}${
         suffix
           ? ` <tspan font-size="14" font-weight="800">${escapeXml(suffix)}</tspan>`
           : ""
       }</text>
+      ${
+        detail
+          ? `<text x="${textX}" y="${detailY}" font-size="10.5" font-weight="700" fill="${palette.muted}" font-family="${FONT_FAMILY}">${escapeXml(detail)}</text>`
+          : ""
+      }
     </g>
   `;
 };
@@ -186,11 +257,36 @@ const renderFlag = (params: {
 }) => {
   const { assets, languageCode, x, y } = params;
   const flagDataUri = getFlagDataUri(assets, languageCode);
+  const clipId = `flag-${languageCode}-${x}-${y}`;
 
-  return `
-    <rect x="${x}" y="${y}" width="28" height="22" rx="7" fill="#FFFFFF" opacity="0.18" />
-    ${renderImage({ href: flagDataUri, x: x + 2, y: y + 3, width: 24, height: 16 })}
-  `;
+  if (!flagDataUri) {
+    return {
+      defs: "",
+      markup: `
+        <rect x="${x}" y="${y}" width="28" height="22" rx="${FLAG_RADIUS}" fill="#FFFFFF" opacity="0.18" />
+        <text x="${x + 14}" y="${y + 15}" text-anchor="middle" font-size="9" font-weight="800" fill="#FFFFFF" font-family="${FONT_FAMILY}">${escapeXml(languageCode.toUpperCase())}</text>
+      `,
+    } satisfies SvgFragment;
+  }
+
+  return {
+    defs: `
+      <clipPath id="${clipId}">
+        <rect x="${x + 2}" y="${y + 3}" width="24" height="16" rx="${FLAG_RADIUS}" />
+      </clipPath>
+    `,
+    markup: `
+      <rect x="${x}" y="${y}" width="28" height="22" rx="${FLAG_RADIUS}" fill="#FFFFFF" opacity="0.18" />
+      ${renderImage({
+        href: flagDataUri,
+        x: x + 2,
+        y: y + 3,
+        width: 24,
+        height: 16,
+        extra: `clip-path="url(#${clipId})"`,
+      })}
+    `,
+  } satisfies SvgFragment;
 };
 
 const renderFlagSummary = (params: {
@@ -203,7 +299,7 @@ const renderFlagSummary = (params: {
 
   return `
     <g>
-      <rect x="${x}" y="${y}" width="26" height="22" rx="7" fill="${palette.surface}" stroke="${palette.border}" stroke-width="2" />
+      <rect x="${x}" y="${y}" width="26" height="22" rx="${FLAG_RADIUS}" fill="${palette.surface}" stroke="${palette.border}" stroke-width="2" />
       <text x="${x + 13}" y="${y + 15}" text-anchor="middle" font-size="11" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">+${count}</text>
     </g>
   `;
@@ -220,20 +316,24 @@ const renderFlagStrip = (params: {
   const { assets, codes, palette, remaining, startX, y } = params;
   const gap = 8;
 
-  const flags = codes
-    .map((code, index) =>
-      renderFlag({
-        assets,
-        languageCode: code,
-        x: startX + index * (28 + gap),
-        y,
-      }),
-    )
-    .join("\n");
-
+  const flags = codes.map((code, index) =>
+    renderFlag({
+      assets,
+      languageCode: code,
+      x: startX + index * (28 + gap),
+      y,
+    }),
+  );
   const summaryX = startX + codes.length * (28 + gap);
 
-  return `${flags}${remaining > 0 ? renderFlagSummary({ count: remaining, palette, x: summaryX, y }) : ""}`;
+  return {
+    defs: flags.map((flag) => flag.defs).join("\n"),
+    markup: `${flags.map((flag) => flag.markup).join("\n")}${
+      remaining > 0
+        ? renderFlagSummary({ count: remaining, palette, x: summaryX, y })
+        : ""
+    }`,
+  } satisfies SvgFragment;
 };
 
 const renderDefaultCard = (params: {
@@ -244,61 +344,70 @@ const renderDefaultCard = (params: {
 }) => {
   const { assets, palette, stats, title } = params;
   const dimensions = CARD_DIMENSIONS.default;
-  const avatar = renderAvatar({
-    assets,
-    fallbackName: stats.name,
-    palette,
-    size: 72,
-    variant: "default",
-    x: 28,
-    y: 28,
-  });
-
+  const streakCardX = 20;
+  const metricCardWidth = 282;
+  const metricCardY = 130;
+  const xpCardX = 318;
   const flagCodes = stats.topLanguages
     .slice(0, 3)
     .map((language) => language.code);
   const remaining = Math.max(0, stats.courses.length - flagCodes.length);
+  const flagStripWidth = getFlagStripWidth(flagCodes.length, remaining);
+  const flagStartX = Math.round(xpCardX + (metricCardWidth - flagStripWidth) / 2);
+  const avatar = renderAvatar({
+    assets,
+    fallbackName: stats.name,
+    palette,
+    size: 64,
+    variant: "default",
+    x: 28,
+    y: 24,
+  });
+  const streakIcon = getStreakIcon(assets, stats.streak);
+  const streakSinceLabel = getStreakSinceLabel(stats);
+  const flags = renderFlagStrip({
+    assets,
+    codes: flagCodes,
+    palette,
+    remaining,
+    startX: flagStartX,
+    y: 92,
+  });
 
   return {
     dimensions,
     palette,
-    defs: avatar.defs,
+    defs: `${avatar.defs}${flags.defs}`,
     body: `
       ${avatar.markup}
-      ${renderTitleLockup({ align: "left", assets, dimensions, palette, title, x: 118, y: 20 })}
-      <text x="118" y="72" font-size="28" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(stats.name)}</text>
-      <text x="118" y="96" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${escapeXml(stats.username)}</text>
+      ${renderTitleLockup({ align: "right", assets, dimensions, palette, title, x: 0, y: 18 })}
+      <text x="110" y="56" font-size="24" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(stats.name)}</text>
+      <text x="110" y="78" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${escapeXml(stats.username)}</text>
+
+      ${flags.markup}
 
       ${renderMetricCard({
-        icon: assets.streakIconDataUri,
+        detail: streakSinceLabel,
+        height: 66,
+        icon: streakIcon,
         label: "STREAK",
         palette,
-        value: stats.streak.toLocaleString("en-US"),
-        width: 196,
-        x: 24,
-        y: 126,
+        value: formatPlainNumber(stats.streak),
+        width: metricCardWidth,
+        x: streakCardX,
+        y: metricCardY,
       })}
       ${renderMetricCard({
+        height: 66,
         icon: assets.xpIconDataUri,
         label: "XP",
         palette,
         suffix: "XP",
         value: formatCompactNumber(stats.totalXp),
-        width: 196,
-        x: 242,
-        y: 126,
+        width: metricCardWidth,
+        x: xpCardX,
+        y: metricCardY,
       })}
-      ${renderMetricCard({
-        label: "LANGUAGES",
-        palette,
-        suffix: stats.courses.length === 1 ? "language" : "languages",
-        value: stats.courses.length.toLocaleString("en-US"),
-        width: 216,
-        x: 460,
-        y: 126,
-      })}
-
-      ${renderFlagStrip({ assets, codes: flagCodes, palette, remaining, startX: 24, y: 198 })}
     `,
   } satisfies RenderResult;
 };
@@ -311,41 +420,53 @@ const renderCompactCard = (params: {
 }) => {
   const { assets, palette, stats, title } = params;
   const dimensions = CARD_DIMENSIONS.compact;
-  const avatar = renderAvatar({
-    assets,
-    fallbackName: stats.name,
-    palette,
-    size: 64,
-    variant: "compact",
-    x: 24,
-    y: 26,
-  });
-
+  const xpCardX = 264;
+  const xpCardWidth = 212;
   const flagCodes = stats.topLanguages
     .slice(0, 3)
     .map((language) => language.code);
   const remaining = Math.max(0, stats.courses.length - flagCodes.length);
+  const flagStripWidth = getFlagStripWidth(flagCodes.length, remaining);
+  const flagStartX = Math.round(xpCardX + (xpCardWidth - flagStripWidth) / 2);
+  const avatar = renderAvatar({
+    assets,
+    fallbackName: stats.name,
+    palette,
+    size: 56,
+    variant: "compact",
+    x: 24,
+    y: 22,
+  });
+  const streakIcon = getStreakIcon(assets, stats.streak);
+  const flags = renderFlagStrip({
+    assets,
+    codes: flagCodes,
+    palette,
+    remaining,
+    startX: flagStartX,
+    y: 88,
+  });
 
   return {
     dimensions,
     palette,
-    defs: avatar.defs,
+    defs: `${avatar.defs}${flags.defs}`,
     body: `
       ${avatar.markup}
-      ${renderTitleLockup({ align: "left", assets, dimensions, palette, title, x: 102, y: 18 })}
-      <text x="102" y="66" font-size="26" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(stats.name)}</text>
-      <text x="102" y="88" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${escapeXml(stats.username)}</text>
+      ${renderTitleLockup({ align: "right", assets, dimensions, palette, title, x: 0, y: 16 })}
+      <text x="92" y="52" font-size="22" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(stats.name)}</text>
+      <text x="92" y="72" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${escapeXml(stats.username)}</text>
 
-      ${renderFlagStrip({ assets, codes: flagCodes, palette, remaining, startX: 102, y: 98 })}
+      ${flags.markup}
 
       ${renderMetricCard({
-        icon: assets.streakIconDataUri,
+        icon: streakIcon,
         label: "STREAK",
         palette,
-        value: stats.streak.toLocaleString("en-US"),
-        width: 236,
+        value: formatPlainNumber(stats.streak),
+        width: 212,
         x: 24,
-        y: 126,
+        y: 116,
       })}
       ${renderMetricCard({
         icon: assets.xpIconDataUri,
@@ -353,9 +474,9 @@ const renderCompactCard = (params: {
         palette,
         suffix: "XP",
         value: formatCompactNumber(stats.totalXp),
-        width: 236,
-        x: 280,
-        y: 126,
+        width: 212,
+        x: xpCardX,
+        y: 116,
       })}
     `,
   } satisfies RenderResult;
@@ -369,6 +490,7 @@ const renderMinimalCard = (params: {
 }) => {
   const { assets, palette, stats, title } = params;
   const dimensions = CARD_DIMENSIONS.minimal;
+  const streakIcon = getStreakIcon(assets, stats.streak);
 
   return {
     dimensions,
@@ -379,9 +501,9 @@ const renderMinimalCard = (params: {
       <text x="24" y="50" font-size="28" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(stats.name)}</text>
       <text x="24" y="72" font-size="14" fill="${palette.muted}" font-family="${FONT_FAMILY}">@${escapeXml(stats.username)}</text>
 
-      ${renderImage({ href: assets.streakIconDataUri, x: 24, y: 88, width: 16, height: 20 })}
-      <text x="46" y="106" font-size="16" font-weight="700" fill="${palette.text}" font-family="${FONT_FAMILY}"><tspan font-size="22" font-weight="800">${stats.streak.toLocaleString(
-        "en-US",
+      ${renderImage({ href: streakIcon, x: 24, y: 88, width: 16, height: 20 })}
+      <text x="46" y="106" font-size="16" font-weight="700" fill="${palette.text}" font-family="${FONT_FAMILY}"><tspan font-size="22" font-weight="800">${formatPlainNumber(
+        stats.streak,
       )}</tspan> streak</text>
 
       ${renderImage({ href: assets.xpIconDataUri, x: 258, y: 86, width: 18, height: 24 })}
@@ -401,8 +523,9 @@ const renderBadgeCard = (params: {
   const { assets, options, palette, stats } = params;
   const showXp = options.metrics.includes("xp");
   const showStreak = options.metrics.includes("streak") || !showXp;
+  const streakIcon = getStreakIcon(assets, stats.streak);
 
-  const streakValue = stats.streak.toLocaleString("en-US");
+  const streakValue = formatPlainNumber(stats.streak);
   const xpValue = `${formatCompactNumber(stats.totalXp)} XP`;
   const width = Math.max(
     186,
@@ -432,7 +555,7 @@ const renderBadgeCard = (params: {
   if (showStreak) {
     parts.push(
       renderImage({
-        href: assets.streakIconDataUri,
+        href: streakIcon,
         x: cursorX,
         y: 20,
         width: 14,
@@ -521,8 +644,8 @@ export const renderUserCardSvg = (
     stats.username,
   )}">
   <defs>${defs}</defs>
-  <rect x="0" y="0" width="${dimensions.width}" height="${dimensions.height}" rx="18" fill="${palette.background}" />
-  <rect x="1" y="1" width="${dimensions.width - 2}" height="${dimensions.height - 2}" rx="17" fill="none" stroke="${palette.border}" />
+  <rect x="0" y="0" width="${dimensions.width}" height="${dimensions.height}" rx="${CARD_OUTER_RADIUS}" fill="${palette.background}" />
+  <rect x="1" y="1" width="${dimensions.width - 2}" height="${dimensions.height - 2}" rx="${CARD_INNER_RADIUS}" fill="none" stroke="${palette.border}" />
   ${body}
 </svg>
 `.trim();

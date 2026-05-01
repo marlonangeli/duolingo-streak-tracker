@@ -1,120 +1,214 @@
 @import "tailwindcss";
 
 :root {
-  --duo-polar: #f7f7f7;
-  --duo-swan: #e5e5e5;
-  --duo-hare: #afafaf;
-  --duo-wolf: #777777;
-  --duo-eel: #4b4b4b;
-  --duo-squid: #ebe3e3;
-  --duo-walking-fish: #ffdfe0;
-  --duo-flamingo: #ffb2b2;
-  --duo-pig: #f5a4a4;
-  --duo-crab: #ff7878;
-  --duo-cardinal: #ff4b4b;
-  --duo-fire-ant: #ea2b2b;
-  --duo-canary: #fff5d3;
-  --duo-duck: #fbe56d;
-  --duo-bee: #ffc800;
-  --duo-lion: #ffb100;
-  --duo-fox: #ff9600;
-  --duo-cheetah: #ffce8e;
-  --duo-monkey: #e5a259;
-  --duo-camel: #e7a601;
-  --duo-guinea-pig: #cd7900;
-  --duo-grizzly: #a56644;
-  --duo-sea-sponge: #d7ffb8;
-  --duo-turtle: #a5ed6e;
-  --duo-owl: #58cc02;
-  --duo-tree-frog: #58a700;
-  --duo-iguana: #ddf4ff;
-  --duo-anchovy: #d2e4e8;
-  --duo-beluga: #bbf2ff;
-  --duo-moon-jelly: #7af0f2;
-  --duo-blue-jay: #84d8ff;
-  --duo-macaw: #1cb0f6;
-  --duo-whale: #1899d6;
-  --duo-humpback: #2b70c9;
-  --duo-narwhal: #1453a3;
-  --duo-starfish: #ffaade;
-  --duo-beetle: #ce82ff;
-  --duo-betta: #9069cd;
-  --duo-butterfly: #6f4ea1;
+    --duo-polar: #f7f7f7;
+    --duo-swan: #e5e5e5;
+    --duo-hare: #afafaf;
+    --duo-wolf: #777777;
+    --duo-eel: #4b4b4b;
+    --duo-squid: #ebe3e3;
+    --duo-walking-fish: #ffdfe0;
+    --duo-flamingo: #ffb2b2;
+    --duo-pig: #f5a4a4;
+    --duo-crab: #ff7878;
+    --duo-cardinal: #ff4b4b;
+    --duo-fire-ant: #ea2b2b;
+    --duo-canary: #fff5d3;
+    --duo-duck: #fbe56d;
+    --duo-bee: #ffc800;
+    --duo-lion: #ffb100;
+    --duo-fox: #ff9600;
+    --duo-cheetah: #ffce8e;
+    --duo-monkey: #e5a259;
+    --duo-camel: #e7a601;
+    --duo-guinea-pig: #cd7900;
+    --duo-grizzly: #a56644;
+    --duo-sea-sponge: #d7ffb8;
+    --duo-turtle: #a5ed6e;
+    --duo-owl: #58cc02;
+    --duo-tree-frog: #58a700;
+    --duo-iguana: #ddf4ff;
+    --duo-anchovy: #d2e4e8;
+    --duo-beluga: #bbf2ff;
+    --duo-moon-jelly: #7af0f2;
+    --duo-blue-jay: #84d8ff;
+    --duo-macaw: #1cb0f6;
+    --duo-whale: #1899d6;
+    --duo-humpback: #2b70c9;
+    --duo-narwhal: #1453a3;
+    --duo-starfish: #ffaade;
+    --duo-beetle: #ce82ff;
+    --duo-betta: #9069cd;
+    --duo-butterfly: #6f4ea1;
 
-  --background: #0d3a22;
-  --card: #104a2b;
-  --foreground: #ffffff;
-  --muted: var(--duo-sea-sponge);
-  --accent: var(--duo-owl);
-  --accent-2: var(--duo-macaw);
+    --background: #10241c;
+    --card: #173126;
+    --foreground: #ffffff;
+    --muted: #d7e2d6;
+    --accent: #74b84f;
+    --accent-2: #5ea5cc;
 
-  --ease-smooth: cubic-bezier(0.2, 0.85, 0.3, 1);
-  --duration-fast: 0.24s;
-  --duration-slow: 0.32s;
+    --ease-smooth: cubic-bezier(0.2, 0.85, 0.3, 1);
+    --duration-fast: 0.24s;
+    --duration-slow: 0.32s;
 }
 
 body {
-  background:
-    radial-gradient(circle at 15% 10%, #56cf2a 0%, transparent 30%),
-    radial-gradient(circle at 80% 12%, #1cb0f6 0%, transparent 24%),
-    radial-gradient(circle at 50% 100%, #0d5e4f 0%, transparent 35%),
-    var(--background);
-  color: var(--foreground);
-  min-height: 100vh;
-  font-family: "Nunito", sans-serif;
+    background:
+        radial-gradient(
+            circle at 16% 12%,
+            rgb(116 184 79 / 0.18) 0%,
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 82% 14%,
+            rgb(94 165 204 / 0.14) 0%,
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 50% 100%,
+            rgb(77 129 108 / 0.16) 0%,
+            transparent 42%
+        ),
+        linear-gradient(180deg, #132820 0%, #0e1e18 100%);
+    color: var(--foreground);
+    min-height: 100vh;
+    font-family: "Nunito", sans-serif;
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 a {
-  color: inherit;
+    color: inherit;
 }
 
 .duo-panel {
-  background: color-mix(in oklab, var(--card) 86%, black 14%);
-  border: 2px solid color-mix(in oklab, #ffffff 20%, transparent);
-  border-radius: 1.2rem;
-  box-shadow:
-    0 8px 0 color-mix(in oklab, #000000 20%, transparent),
-    0 18px 40px color-mix(in oklab, #000000 38%, transparent);
-  transition:
-    transform var(--duration-fast) var(--ease-smooth),
-    box-shadow var(--duration-fast) var(--ease-smooth),
-    border-color var(--duration-fast) var(--ease-smooth);
+    background: color-mix(in oklab, var(--card) 88%, black 12%);
+    border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+    border-radius: 1.2rem;
+    box-shadow:
+        0 8px 0 color-mix(in oklab, #000000 16%, transparent),
+        0 18px 40px color-mix(in oklab, #000000 28%, transparent);
+    transition:
+        transform var(--duration-fast) var(--ease-smooth),
+        box-shadow var(--duration-fast) var(--ease-smooth),
+        border-color var(--duration-fast) var(--ease-smooth);
 }
 
 .duo-interactive {
-  transition:
-    transform var(--duration-fast) var(--ease-smooth),
-    filter var(--duration-fast) var(--ease-smooth),
-    border-color var(--duration-fast) var(--ease-smooth),
-    background-color var(--duration-fast) var(--ease-smooth);
+    transition:
+        transform var(--duration-fast) var(--ease-smooth),
+        filter var(--duration-fast) var(--ease-smooth),
+        border-color var(--duration-fast) var(--ease-smooth),
+        background-color var(--duration-fast) var(--ease-smooth);
 }
 
 .duo-interactive:hover {
-  transform: translateY(-1px);
+    transform: translateY(-1px);
+}
+
+.duo-brand {
+    position: relative;
+}
+
+.duo-brand-logo {
+    position: relative;
+    display: inline-flex;
+    width: 88px;
+    height: 21px;
+}
+
+.duo-brand-logo :where(img) {
+    position: absolute;
+    inset: 0;
+    transition:
+        opacity var(--duration-fast) var(--ease-smooth),
+        filter var(--duration-fast) var(--ease-smooth);
+}
+
+.duo-brand-logo-hover {
+    opacity: 0;
+}
+
+.duo-brand-text {
+    transition: color var(--duration-fast) var(--ease-smooth);
+}
+
+.duo-brand:hover .duo-brand-logo-primary {
+    opacity: 0;
+    filter: brightness(1.08);
+}
+
+.duo-brand:hover .duo-brand-logo-hover {
+    opacity: 1;
+}
+
+.duo-brand:hover .duo-brand-text {
+    color: #ffffff;
 }
 
 .duo-pill {
-  border-radius: 999px;
-  border: 2px solid color-mix(in oklab, #ffffff 18%, transparent);
-  background: color-mix(in oklab, #000000 12%, transparent);
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+    background: color-mix(in oklab, #000000 10%, transparent);
 }
 
 .duo-link {
-  border-radius: 999px;
-  border: 2px solid color-mix(in oklab, #ffffff 18%, transparent);
-  background: color-mix(in oklab, #000000 15%, transparent);
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+    background: color-mix(in oklab, #000000 10%, transparent);
 }
 
 .duo-link:hover {
-  border-color: color-mix(in oklab, var(--duo-macaw) 70%, white 30%);
-  background: color-mix(in oklab, var(--duo-macaw) 28%, transparent);
+    border-color: color-mix(in oklab, var(--accent-2) 60%, white 40%);
+    background: color-mix(in oklab, var(--accent-2) 18%, transparent);
+}
+
+.duo-button,
+.duo-button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border: none !important;
+    border-radius: 12px;
+    background: #58cc02;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    padding: 15px 16px;
+    box-shadow: 0 4px 0 #58a700;
+    text-decoration: none;
+    transition:
+        transform var(--duration-fast) var(--ease-smooth),
+        box-shadow var(--duration-fast) var(--ease-smooth),
+        filter var(--duration-fast) var(--ease-smooth);
+}
+
+.duo-button:hover,
+.duo-button-link:hover {
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+}
+
+.duo-button:active,
+.duo-button-link:active {
+    box-shadow: none;
+    transform: translateY(4px);
+}
+
+.duo-button--sm {
+    padding: 0.75rem 0.95rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .duo-flag {
-  border-radius: 4px;
-  box-shadow: 0 2px 0 color-mix(in oklab, #000000 26%, transparent);
+    border-radius: 4px;
+    box-shadow: 0 2px 0 color-mix(in oklab, #000000 26%, transparent);
 }

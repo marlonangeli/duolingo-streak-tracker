@@ -14,9 +14,9 @@ export type CardThemeMeta = {
 };
 
 export const CARD_THEME_ORDER: CardTheme[] = [
-  "duo",
-  "eel",
   "polar",
+  "eel",
+  "duo",
   "cardinal",
   "fox",
   "owl",
@@ -43,8 +43,8 @@ export const CARD_THEME_META: Record<CardTheme, CardThemeMeta> = {
     background: "#4B4B4B",
     surface: "#777777",
     text: "#F7F7F7",
-    muted: "#E5E5E5",
-    chip: "#2F2F2F",
+    muted: "#DCDCDC",
+    chip: "#777777",
     chipBorder: "#AFAFAF",
     chipText: "#F7F7F7",
     border: "#AFAFAF",

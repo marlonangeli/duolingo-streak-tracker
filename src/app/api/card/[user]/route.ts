@@ -103,6 +103,7 @@ const buildSharedCardAssets = async () => {
     duoIconDataUri,
     errorIllustrationDataUri,
     streakIconDataUri,
+    streakInactiveIconDataUri,
     xpIconDataUri,
   ] = await Promise.all([
     buildLocalAssetDataUri("public/icon.svg", "image/svg+xml"),
@@ -111,6 +112,10 @@ const buildSharedCardAssets = async () => {
       "image/svg+xml",
     ),
     buildLocalAssetDataUri("public/brand/icons/streak.svg", "image/svg+xml"),
+    buildLocalAssetDataUri(
+      "public/brand/icons/streak-inactive.svg",
+      "image/svg+xml",
+    ),
     buildLocalAssetDataUri("public/brand/icons/xp.svg", "image/svg+xml"),
   ]);
 
@@ -118,6 +123,7 @@ const buildSharedCardAssets = async () => {
     duoIconDataUri,
     errorIllustrationDataUri,
     streakIconDataUri,
+    streakInactiveIconDataUri,
     xpIconDataUri,
   };
 };

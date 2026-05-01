@@ -7,7 +7,7 @@ import {
 
 const DUOLINGO_BASE_URL = "https://www.duolingo.com/2017-06-30/users";
 const DUOLINGO_FIELDS =
-  "users{id,username,name,picture,totalXp,streak,streakData{currentStreak,longestStreak,previousStreak},courses{id,title,learningLanguage,fromLanguage,xp,crowns},currentCourseId,fromLanguage,learningLanguage,hasPlus,creationDate,xpGoal,timezone,timezoneOffset}";
+  "users{id,username,name,picture,totalXp,streak,streakData{currentStreak,longestStreak,previousStreak},courses{id,title,learningLanguage,fromLanguage,xp},currentCourseId,fromLanguage,learningLanguage,hasPlus,creationDate,xpGoal,timezone,timezoneOffset}";
 const DUOLINGO_USER_AGENT =
   "Mozilla/5.0 (compatible; DuolingoStreakTracker/2.0; +https://duolingo-streak-tracker.vercel.app)";
 
@@ -69,7 +69,6 @@ const mapUser = (user: DuolingoUser): UserStats => {
       learningLanguage: course.learningLanguage,
       fromLanguage: course.fromLanguage,
       xp: course.xp,
-      crowns: course.crowns ?? null,
     })),
     topLanguages,
     league: {
