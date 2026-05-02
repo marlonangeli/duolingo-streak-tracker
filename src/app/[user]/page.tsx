@@ -86,7 +86,6 @@ const ProfileMetricCard = ({
           alt={iconAlt ?? ""}
           width={iconWidth ?? 20}
           height={iconHeight ?? 20}
-          className="h-6 w-auto"
         />
       ) : null}
       <span>{value}</span>
@@ -290,6 +289,7 @@ const UserPage = async ({ params, searchParams }: UserPageProps) => {
             sizes={cardImageSizes}
             unoptimized
             className={cardPreviewImageClass}
+            loading="eager"
           />
         </div>
 

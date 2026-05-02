@@ -39,6 +39,9 @@ curl "https://duolingo-streak-tracker.vercel.app/api/stats/marlonangeli"
 
 Returns an `image/svg+xml` card you can embed directly in Markdown.
 
+Card icons and brand assets are resolved from public URLs at request time so
+the generated SVG stays consistent between local and deployed environments.
+
 Supported query params:
 
 - `theme`: `duo | dark | light | sunset`
