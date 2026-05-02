@@ -44,7 +44,7 @@ the generated SVG stays consistent between local and deployed environments.
 
 Supported query params:
 
-- `theme`: `duo | dark | light | sunset`
+- `theme`: `polar | eel | duo | cardinal | owl | macaw | butterfly`
 - `variant`: `default | compact | minimal | badges`
 - `show`: comma-separated metrics (`streak,xp,languages,league,plus`)
 - `langLimit`: `1..6`
@@ -53,14 +53,32 @@ Supported query params:
 Example:
 
 ```text
-https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=duo&variant=default
+https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=default
 ```
 
 ## Embed in GitHub README
 
 ```md
-![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=duo&variant=default)
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=default)
 ```
+
+## Variant examples (Polar theme)
+
+**Default**
+
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=default)
+
+**Compact**
+
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=compact)
+
+**Minimal**
+
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=minimal)
+
+**Badge**
+
+![Duolingo Streak Card](https://duolingo-streak-tracker.vercel.app/api/card/marlonangeli?theme=polar&variant=badges)
 
 ## Notes about League Data
 

@@ -524,79 +524,98 @@ const renderBadgeCard = (params: {
   const showXp = options.metrics.includes("xp");
   const showStreak = options.metrics.includes("streak") || !showXp;
   const streakIcon = getStreakIcon(assets, stats.streak);
+  const badgeHeight = CARD_DIMENSIONS.badges.height;
+  const tileWidth = badgeHeight;
+  const tileRadius = CARD_OUTER_RADIUS;
+  const badgePalette = {
+    ...palette,
+    background: "#1F1F1F",
+    border: "#1F1F1F",
+    text: "#FFFFFF",
+    muted: "#D7D7D7",
+  };
 
   const streakValue = formatPlainNumber(stats.streak);
-  const xpValue = `${formatCompactNumber(stats.totalXp)} XP`;
+  const xpValue = formatCompactNumber(stats.totalXp);
+  const leftPadding = 12;
+  const rightPadding = 26;
+  const iconGap = 8;
+  const metricGap = 18;
+  const streakIconSize = { width: 16, height: 20 };
+  const xpIconSize = { width: 18, height: 24 };
+  const streakTextWidth = streakValue.length * 10;
+  const xpTextWidth = xpValue.length * 10;
   const width = Math.max(
-    186,
-    Math.min(
-      320,
-      72 +
-        (showStreak ? streakValue.length * 10 + 36 : 0) +
-        (showXp ? xpValue.length * 8 + 54 : 0),
-    ),
+    220,
+    tileWidth +
+      leftPadding +
+      rightPadding +
+      (showStreak
+        ? streakIconSize.width + iconGap + streakTextWidth
+        : 0) +
+      (showXp
+        ? metricGap + xpIconSize.width + iconGap + xpTextWidth
+        : 0),
   );
 
-  let cursorX = 46;
+  const duoSize = badgeHeight - 20;
+  const duoOffset = Math.round((tileWidth - duoSize) / 2);
+  const textY = 40;
+  let cursorX = tileWidth + leftPadding;
   const parts = [
-    // TODO: Duolingo image should be bigger to match entire height of the frame, should fill the gap on the left and remove the extra padding on the right
+    `<path d="M${tileRadius} 0 H${tileWidth} V${badgeHeight} H${tileRadius} A${tileRadius} ${tileRadius} 0 0 1 0 ${badgeHeight - tileRadius} V${tileRadius} A${tileRadius} ${tileRadius} 0 0 1 ${tileRadius} 0 Z" fill="#58CC02" />`,
     renderImage({
       href: assets.duoIconDataUri,
-      x: 14,
-      y: 14,
-      width: 24,
-      height: 24,
+      x: duoOffset,
+      y: duoOffset,
+      width: duoSize,
+      height: duoSize,
     }),
-    // TODO: remove this separator
-    // `<text x="${cursorX}" y="39" font-size="15" font-weight="800" fill="${palette.muted}" font-family="${FONT_FAMILY}">|</text>`,
   ];
-  cursorX += 14;
 
   if (showStreak) {
+    const iconY = Math.round((badgeHeight - streakIconSize.height) / 2);
     parts.push(
       renderImage({
         href: streakIcon,
         x: cursorX,
-        y: 20,
-        width: 14,
-        height: 18,
+        y: iconY,
+        width: streakIconSize.width,
+        height: streakIconSize.height,
       }),
     );
-    cursorX += 20;
+    cursorX += streakIconSize.width + iconGap;
     parts.push(
-      `<text x="${cursorX}" y="39" font-size="20" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(
+      `<text x="${cursorX}" y="${textY}" font-size="20" font-weight="800" fill="${badgePalette.text}" font-family="${FONT_FAMILY}">${escapeXml(
         streakValue,
       )}</text>`,
     );
-    cursorX += Math.max(34, streakValue.length * 10);
+    cursorX += streakTextWidth;
   }
 
   if (showXp) {
-    parts
-      .push // TODO: can remove this separator
-      // `<text x="${cursorX}" y="39" font-size="14" font-weight="800" fill="${palette.muted}" font-family="${FONT_FAMILY}">-</text>`,
-      ();
-    cursorX += 14;
+    cursorX += metricGap;
+    const iconY = Math.round((badgeHeight - xpIconSize.height) / 2);
     parts.push(
       renderImage({
         href: assets.xpIconDataUri,
         x: cursorX,
-        y: 18,
-        width: 16,
-        height: 22,
+        y: iconY,
+        width: xpIconSize.width,
+        height: xpIconSize.height,
       }),
     );
-    cursorX += 22;
+    cursorX += xpIconSize.width + iconGap;
     parts.push(
-      `<text x="${cursorX}" y="39" font-size="20" font-weight="800" fill="${palette.text}" font-family="${FONT_FAMILY}">${escapeXml(
+      `<text x="${cursorX}" y="${textY}" font-size="20" font-weight="800" fill="${badgePalette.text}" font-family="${FONT_FAMILY}">${escapeXml(
         xpValue,
       )}</text>`,
     );
   }
 
   return {
-    dimensions: { width, height: CARD_DIMENSIONS.badges.height },
-    palette,
+    dimensions: { width, height: badgeHeight },
+    palette: badgePalette,
     defs: "",
     body: parts.join("\n"),
   } satisfies RenderResult;

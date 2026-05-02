@@ -5,7 +5,6 @@ export const cardThemeSchema = z.enum([
   "eel",
   "duo",
   "cardinal",
-  "fox",
   "owl",
   "macaw",
   "butterfly",
