@@ -7,8 +7,6 @@ import { renderMissingUserSvg, renderUserCardSvg } from "@/lib/card/svg";
 import { getUserStatsByUsername } from "@/lib/duolingo/client";
 import { getLanguageFlagCode } from "@/lib/language-flag-map";
 import { parseCardOptions } from "@/models/card";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 
 export const runtime = "nodejs";
 
@@ -21,27 +19,20 @@ const toDataUri = (mimeType: string, bytes: ArrayBuffer | ArrayBufferView) => {
   return `data:${mimeType};base64,${buffer.toString("base64")}`;
 };
 
-const buildLocalAssetDataUri = async (
-  relativePath: string,
-  mimeType: string,
-) => {
-  try {
-    const bytes = await readFile(
-      path.join(/* turbopackIgnore: true */ process.cwd(), relativePath),
-    );
-    return toDataUri(mimeType, bytes);
-  } catch {
-    return null;
-  }
+const getResponseMimeType = (response: Response, fallbackMimeType: string) => {
+  const headerMimeType = response.headers.get("content-type")?.split(";")[0].trim();
+
+  return headerMimeType && headerMimeType.includes("/")
+    ? headerMimeType
+    : fallbackMimeType;
 };
 
-const buildAvatarDataUri = async (avatarUrl: string | null) => {
-  if (!avatarUrl) {
-    return null;
-  }
-
+const buildFetchedAssetDataUri = async (
+  assetUrl: string | URL,
+  fallbackMimeType: string,
+) => {
   try {
-    const response = await fetch(avatarUrl, {
+    const response = await fetch(assetUrl, {
       method: "GET",
       next: {
         revalidate: 60 * 60,
@@ -53,22 +44,28 @@ const buildAvatarDataUri = async (avatarUrl: string | null) => {
     }
 
     const bytes = new Uint8Array(await response.arrayBuffer());
-    const headerMimeType = response.headers
-      .get("content-type")
-      ?.split(";")[0]
-      .trim();
-    const mimeType =
-      headerMimeType && headerMimeType.includes("/")
-        ? headerMimeType
-        : "image/jpeg";
 
-    return toDataUri(mimeType, bytes);
+    return toDataUri(
+      getResponseMimeType(response, fallbackMimeType),
+      bytes,
+    );
   } catch {
     return null;
   }
 };
 
-const buildFlagDataUris = async (languageCodes: string[]) => {
+const buildAvatarDataUri = async (avatarUrl: string | null) => {
+  if (!avatarUrl) {
+    return null;
+  }
+
+  return buildFetchedAssetDataUri(avatarUrl, "image/jpeg");
+};
+
+const buildFlagDataUris = async (
+  requestUrl: string,
+  languageCodes: string[],
+) => {
   const uniqueCountryCodes = Array.from(
     new Set(
       languageCodes
@@ -79,26 +76,23 @@ const buildFlagDataUris = async (languageCodes: string[]) => {
 
   const pairs = await Promise.all(
     uniqueCountryCodes.map(async (countryCode) => {
-      const filePath = path.join(
-        /* turbopackIgnore: true */ process.cwd(),
-        "public",
-        "flags",
-        `${countryCode}.svg`,
+      const flagDataUri = await buildFetchedAssetDataUri(
+        new URL(`/flags/${countryCode}.svg`, requestUrl),
+        "image/svg+xml",
       );
 
-      try {
-        const bytes = await readFile(filePath);
-        return [countryCode, toDataUri("image/svg+xml", bytes)] as const;
-      } catch {
+      if (!flagDataUri) {
         return [countryCode, ""] as const;
       }
+
+      return [countryCode, flagDataUri] as const;
     }),
   );
 
   return Object.fromEntries(pairs.filter(([, value]) => value.length > 0));
 };
 
-const buildSharedCardAssets = async () => {
+const buildSharedCardAssets = async (requestUrl: string) => {
   const [
     duoIconDataUri,
     errorIllustrationDataUri,
@@ -106,17 +100,23 @@ const buildSharedCardAssets = async () => {
     streakInactiveIconDataUri,
     xpIconDataUri,
   ] = await Promise.all([
-    buildLocalAssetDataUri("public/icon.svg", "image/svg+xml"),
-    buildLocalAssetDataUri(
-      "public/brand/characters/duo-error.svg",
+    buildFetchedAssetDataUri(new URL("/icon.svg", requestUrl), "image/svg+xml"),
+    buildFetchedAssetDataUri(
+      new URL("/brand/characters/duo-error.svg", requestUrl),
       "image/svg+xml",
     ),
-    buildLocalAssetDataUri("public/brand/icons/streak.svg", "image/svg+xml"),
-    buildLocalAssetDataUri(
-      "public/brand/icons/streak-inactive.svg",
+    buildFetchedAssetDataUri(
+      new URL("/brand/icons/streak.svg", requestUrl),
       "image/svg+xml",
     ),
-    buildLocalAssetDataUri("public/brand/icons/xp.svg", "image/svg+xml"),
+    buildFetchedAssetDataUri(
+      new URL("/brand/icons/streak-inactive.svg", requestUrl),
+      "image/svg+xml",
+    ),
+    buildFetchedAssetDataUri(
+      new URL("/brand/icons/xp.svg", requestUrl),
+      "image/svg+xml",
+    ),
   ]);
 
   return {
@@ -136,7 +136,7 @@ export async function GET(
 
   const searchParams = new URL(request.url).searchParams;
   const options = parseCardOptions(searchParams);
-  const sharedAssets = await buildSharedCardAssets();
+  const sharedAssets = await buildSharedCardAssets(request.url);
 
   try {
     const userStats = await getUserStatsByUsername(user);
@@ -155,6 +155,7 @@ export async function GET(
     const [avatarDataUri, flagDataUris] = await Promise.all([
       buildAvatarDataUri(userStats.avatarUrl),
       buildFlagDataUris(
+        request.url,
         userStats.topLanguages.map((language) => language.code),
       ),
     ]);

@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Nunito } from "next/font/google";
 import { APP_UPDATED_LABEL, APP_VERSION } from "@/lib/app-meta";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const nunito = Nunito({ subsets: ["latin"], weight: ["600", "700", "800"] });
-const REPOSITORY_URL = "https://github.com/marlonangeli/duolingo-streak-tracker";
+const REPOSITORY_URL =
+  "https://github.com/marlonangeli/duolingo-streak-tracker";
 
 export const metadata: Metadata = {
   title: "Duolingo Streak Tracker",
@@ -21,6 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <SpeedInsights />
       <body className={nunito.className}>
         <div className="flex min-h-screen flex-col">
           <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[color:color-mix(in_oklab,var(--card)_90%,black_10%)]/90 backdrop-blur-xl">
@@ -53,10 +56,16 @@ export default function RootLayout({
               </Link>
 
               <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wide text-slate-200 sm:text-xs">
-                <Link href="/#help" className="duo-link duo-interactive px-3 py-1.5">
+                <Link
+                  href="/#help"
+                  className="duo-link duo-interactive px-3 py-1.5"
+                >
                   Help
                 </Link>
-                <Link href="/#legal" className="duo-link duo-interactive px-3 py-1.5">
+                <Link
+                  href="/#legal"
+                  className="duo-link duo-interactive px-3 py-1.5"
+                >
                   Legal
                 </Link>
               </nav>

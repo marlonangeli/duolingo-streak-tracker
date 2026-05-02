@@ -1,6 +1,6 @@
 {
   "name": "duolingo-streak-tracker",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "packageManager": "bun@1.3.5",
   "scripts": {
@@ -13,6 +13,7 @@
     "flags:sync": "node scripts/sync-flags.mjs"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^2.0.0",
     "flag-icons": "^7.5.0",
     "next": "^16.2.2",
     "react": "^19.2.4",
